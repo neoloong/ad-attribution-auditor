@@ -1,316 +1,357 @@
-# Competitive Analysis: Ad Attribution Auditor
+# Competitive Analysis — Ad Attribution Auditor
 
-**Project:** https://github.com/neoloong/ad-attribution-auditor
-**Date:** 2026-04-15
-**Author:** Scientist Agent + Cleo
-**Sources:** Primary research, G2, TrustRadius, competitor websites, industry reviews
+**Document Version:** 1.0
+**Date:** April 2026
+**Author:** Scientist Agent
+**Project:** Ad Attribution Auditor (Chrome Extension)
 
 ---
 
 ## Executive Summary
 
-The ad attribution market is real and growing, validated by $80M+ in VC funding across Triple Whale, Rockerbox, and Northbeam in the past 24 months. However, **every existing competitor is a web-based SaaS tool** — none offer a Chrome extension that works in-dashboard. Our proposed Chrome Extension strategy fills a genuine gap: zero-friction, always-present attribution verification that competitors cannot easily replicate because they are built on web app architectures.
-
-**Our positioning:** The only attribution tool you don't have to leave your ad dashboard to use.
+The ad attribution space is dominated by enterprise-grade platforms (Triple Whale, Northbeam, Rockerbox, Hyros) that require significant setup time, ongoing configuration, and monthly budgets often exceeding $500–$1,000+. Meanwhile, Shopify D2C brands spending $10K–$500K/month on ads are left to rely on Meta and Google's own structurally conflicted attribution models, which systematically over-credit paid channels and obscure the true contribution of organic and direct traffic. Littledata addresses parts of this problem but focuses on data plumbing, not attribution scoring. No existing tool provides real-time, in-dashboard attribution accuracy validation via a lightweight Chrome extension at a sub-$10 entry price. This represents a clear and exploitable market gap.
 
 ---
 
-## 1. Competitor Profiles
+## Competitor Profiles
 
-### 1.1 Triple Whale
+### 1. Triple Whale
 
-**Website:** https://www.triplewhale.com
-**Funding:** $25M Series B (2023)
-**Pricing (2025-2026):**
-- Starter: **$219/month**
-- Based on GMV: $549/month ($1M-$2.5M GMV), $1,129/month ($5M-$7M GMV), $1,849/month ($10M-$15M GMV)
-- All plans priced based on annual revenue, auto-scale as store grows
-- Free 30-day trial available
-- G2 shows up to $4,490/month for top tier
+**Website:** https://triplewhale.com
+**Blocked by Cloudflare at time of research; relying on G2, Trustpilot, and third-party reviews for data.**
 
-**What they do:**
-Triple Whale is the most Shopify-native of the incumbents. They position as "the last attribution tool you'll ever need" combining MTA (multi-touch attribution), incrementality testing, and AI-powered insights. Their key differentiator is the "incrementality" angle — they run holdout experiments to measure true causal ROAS, not just attribution correlation.
+**Product Overview:**
+Triple Whale is an advanced marketing attribution platform designed for e-commerce brands. It combines multi-touch attribution (MTA), incrementality testing, and media mix modeling (MMM) into a unified analytics dashboard. Triple Whale's key differentiator is its "fingerprinting" approach to cross-device and cross-channel user journey tracking, and its strong emphasis on "carbon impact" (environmental SEO-style metrics for paid channels).
 
-**How it works:** Web app only. Connects to Shopify + Meta + Google + TikTok via native integrations. Requires onboarding, API connections, and typically a discovery call before full setup.
+**How It Works:**
+Triple Whale operates as a server-side tag management layer. Users install a tracking pixel/snippet, connect their ad platform APIs (Meta, Google, TikTok, etc.), and import Shopify order data via direct integration. Triple Whale then reconstructs individual customer journeys and applies a configurable attribution model (first-touch, last-touch, linear, time-decay, or custom) to distribute credit across touchpoints. The platform shows a "true ROAS" figure that accounts for organic and direct traffic the brand would have received regardless of paid spend.
+
+**Pricing:**
+Triple Whale does not publish pricing on its website. Based on publicly available reviews (G2, Trustpilot) and industry discussions, pricing starts at approximately **$500–$1,000/month** for small e-commerce brands, with enterprise plans running **$2,000–$5,000+/month** depending on ad spend volume and the number of channels tracked. There is no free tier. All plans require a sales call for onboarding.
 
 **Strengths:**
-- Best-in-class Shopify integration
-- Incrementality testing (holdout experiments) is credible and defensible methodology
-- Strong content engine (ecommerce benchmarks blog posts drive SEO)
-- "Pixel-free" approach uses server-side tracking, more reliable post-iOS 14.5
+- Comprehensive MTA + MMM + incrementality in one platform
+- Excellent for brands spending $100K+/month on ads
+- Strong community and content marketing (Triple Whale has a strong brand identity)
+- Deterministic user-level attribution across devices
+- Good visualization of the full customer journey
 
 **Weaknesses:**
-- Web app only — requires leaving your ad dashboard to use
-- Expensive: $549-$1,849/month is enterprise pricing for most Shopify SMBs
-- Complex onboarding — not a "install and go" product
+- No Chrome extension or in-dashboard overlay product
+- Complex onboarding; requires dedicated time investment (most users cite 4–8 weeks to fully configure)
+- Expensive for the target $10K–$100K/month ad spend segment
+- Shopify integration is standard (pulls order data via API) but not uniquely deep
+- No real-time "attribution accuracy score" — instead shows attribution breakdowns under the platform's own model
+- No public pricing; sales-driven gating creates friction for SMBs
+
+**Chrome Extension / Delivery Mechanism:**
+None. Web app only. Triple Whale does not offer any browser-based overlay or extension product.
+
+---
+
+### 2. Northbeam
+
+**Website:** https://northbeam.io
+
+**Product Overview:**
+Northbeam is a marketing intelligence platform positioned at mid-market and enterprise e-commerce brands. It offers multi-touch attribution, media mix modeling (MMM+), and "Northbeam Apex" — a data forwarding layer that sends attribution signals directly into ad platform algorithms to optimize bidding in real time. Northbeam is known for its clean UI and strong data visualization.
+
+**How It Works:**
+Northbeam connects to ad platforms via standard API integrations and uses a combination of pixel-based and server-side tracking. It builds a unified customer journey by stitching together touchpoints across paid search, social, display, email, and organic. Northbeam's MTA model runs on configurable lookback windows (up to 90 days or unlimited with MMM+). The "Apex" product represents a significant differentiator — it feeds Northbeam's conversion data back into Meta, Google, and TikTok's algorithm for automated bid optimization.
+
+**Pricing:**
+Northbeam does not publish pricing. Based on available data, plans start at approximately **$500/month** for smaller accounts and scale to **$2,000–$10,000+/month** for large enterprise clients. All plans require a demo and sales conversation. No free tier is available.
+
+**Strengths:**
+- Excellent UI/UX — consistently rated highest among competitors for ease of use
+- Strong MMM+ product for long-term budget planning
+- Apex integration for algorithm-level ad optimization is unique
+- Deterministic view-through attribution ("Clicks + Deterministic Views") is a genuine innovation
+- Claims 37% ROAS increase, 14% CVR increase, 20% CAC decrease (self-reported by enterprise customers)
+
+**Weaknesses:**
 - No Chrome extension or in-dashboard overlay
+- No public pricing — sales-driven
+- Requires significant setup and integration work
+- May be overkill for brands spending under $50K/month on ads
+- No specific "attribution accuracy score" — instead shows attribution under Northbeam's own model
+- Not specifically Shopify-focused; general e-commerce focus
 
-**Chrome Extension:** ❌ None
-
----
-
-### 1.2 Northbeam
-
-**Website:** https://www.northbeam.io
-**Funding:** $15M Series A
-**Pricing (2025-2026):**
-- Starter: **$1,500/month minimum** (requires $1.5M+ annual ad spend)
-- Some sources: Professional plan starts at $2,500/month
-- Growth: $299/month (but minimum spend requirements apply)
-- Scale: $599/month
-- Enterprise: Custom pricing
-- Requires "book a demo" — enterprise sales cycle
-
-**What they do:**
-Northbeam markets itself as a "marketing intelligence platform for profitable growth." They offer MTA + MMM Plus (media mix modeling) + Apex (ad platform data enrichment that pushes intelligence back into ad platform algorithms).
-
-Key claim: Enterprise customers see 37% ROAS increase, 14% CVR improvement, 20% CAC decrease after one year.
-
-**How it works:** Web app only. Heavy enterprise focus with dedicated integrations.
-
-**Strengths:**
-- "Northbeam Apex" — sends attribution data back to ad platform algorithms for improved optimization. This is a real differentiator.
-- Deterministic view-through attribution (not just clicks)
-- MMM integration for brands that need budget allocation modeling above the channel level
-
-**Weaknesses:**
-- **$1,500/month minimum** pricing excludes 95% of Shopify SMBs
-- Enterprise sales cycle (demo required, not self-serve)
-- Web app only — no extension, no in-dashboard tool
-- Complex setup — not plug-and-play
-
-**Chrome Extension:** ❌ None
+**Chrome Extension / Delivery Mechanism:**
+None. Web app only. No browser extension product exists.
 
 ---
 
-### 1.3 Rockerbox
+### 3. Rockerbox
 
 **Website:** https://rockerbox.com
-**Funding:** $40M+ Series B
-**Pricing:** Not publicly available — enterprise only (typically $100K+/year engagements)
 
-**What they do:**
-Rockerbox is the most enterprise-oriented of the group. They position as a unified MTA + MMM + incrementality testing platform for large brands and agencies. The "one dashboard to rule them all" for Fortune 500 marketing teams.
+**Product Overview:**
+Rockerbox is an enterprise-focused measurement platform that combines multi-touch attribution, media mix modeling, and controlled testing (incrementality) under one roof. Rockerbox's positioning is explicitly "unified measurement" — it argues that MTA, MMM, and testing answer different questions and should be used together rather than in isolation. Rockerbox is known for its data foundation layer (a SOC2-certified centralized marketing data repository) that serves as the single source of truth for all measurement methodologies.
 
-**How it works:** Full-service enterprise engagement, not self-serve SaaS.
+**How It Works:**
+Rockerbox requires enterprises to send all their marketing data (digital, offline, paid, organic) into Rockerbox's data foundation. From this centralized foundation, Rockerbox runs MTA, MMM, and testing simultaneously. The key insight Rockerbox offers is showing where methodologies agree and where they diverge — giving marketers confidence when alignment exists and prompting investigation when they don't.
+
+**Pricing:**
+Rockerbox is explicitly **enterprise-only**. There is no public pricing, no self-serve onboarding, and no free tier. Pricing is negotiated directly with sales and is likely in the **$5,000–$50,000+/month** range given the enterprise positioning. Minimum contract lengths are typically annual.
 
 **Strengths:**
-- Most comprehensive feature set (MTA + MMM + incrementality)
-- Strong agency/enterprise relationships
-- Large customer base (hundreds of brands)
+- Most comprehensive measurement methodology coverage (MTA + MMM + testing)
+- SOC2-certified data foundation provides enterprise-grade trust
+- "Methodology alignment" view is genuinely useful for strategic decision-making
+- Strong for large brands with complex, multi-channel marketing
 
 **Weaknesses:**
-- Completely inaccessible to SMB — not just price, but complexity and sales model
-- No self-serve option
-- Not Shopify-native (enterprise brands often use Magento, Salesforce, custom stacks)
+- Completely inaccessible to the SMB / lower-mid-market segment (our target)
+- Multi-month implementation cycles
+- No Chrome extension or lightweight product
+- No real-time overlay or score — strategic reporting tool
+- No Shopify-specific depth (generalist enterprise focus)
 
-**Chrome Extension:** ❌ None
+**Chrome Extension / Delivery Mechanism:**
+None. Enterprise SaaS platform only.
 
 ---
 
-### 1.4 Littledata
+### 4. Littledata
 
 **Website:** https://littledata.io
-**Pricing (2025-2026):**
-- Free 30-day trial
-- Plans from ~$99/month to $999/month
-- Priced per brand, based on monthly order volume
-- Billed via Shopify (for Shopify merchants)
-- Annual plans available with invoice option
 
-**What they do:**
-Littledata is Shopify-native server-side tracking. They position as the "connection layer" between Shopify and your marketing platforms (Meta, Google, TikTok, etc.). They fix the tracking discrepancies that happen when pixels miss conversions (especially post-iOS 14.5).
+**Product Overview:**
+Littledata is a Shopify-focused data layer and server-side tracking platform. Its core value proposition is ensuring that Shopify's conversion data is accurately and completely delivered to Google, Meta, and Klaviyo — compensating for browser tracking failures (Safari ITP, iOS 14+ privacy changes, Chrome's third-party cookie deprecation). Littledata does not do attribution modeling itself; instead, it ensures the data that attribution models are built on is accurate.
 
-**Key differentiation:** Not primarily an attribution tool — it's a tracking accuracy tool. They ensure the data flowing into Meta/Google is accurate and complete, not that Meta/Google's interpretation of that data is correct.
+**How It Works:**
+Littledata installs as a Shopify app (10-minute setup, no GTM or code required). It provides server-side conversion tracking that fires directly from Shopify's servers, bypassing browser-based tracking limitations. Littledata also offers "Session Enrichment" and "Persistent ID" features that reconnect returning shoppers who appear as new users due to Safari/Chrome privacy restrictions. Data flows to Google Enhanced Conversions and Meta Conversions API.
 
-**How it works:** Install a Shopify app + a server-side tag. Automatically syncs Shopify orders with ad platforms via server-side API (not pixel-based).
+**Pricing:**
+Littledata publishes pricing on its website. Plans start at **$49/month** for the Starter plan (limited features), with the Professional plan at **$149/month** and Enterprise at **$399/month** (prices as of 2025 — verify current pricing directly). This makes Littledata the most accessible from a price perspective among all competitors reviewed.
 
 **Strengths:**
-- Shopify App Store presence — discoverable to Shopify merchants
-- Priced affordably ($99-$999/month) vs. Triple Whale/Northbeam
-- Easy setup (Shopify app install)
-- Server-side tracking is more reliable post-iOS 14.5
+- 10-minute Shopify setup — genuinely low friction
+- Directly solves the iOS 14+ / Safari ITP / third-party cookie data loss problem
+- Server-side tracking improves data completeness for all downstream attribution tools
+- Persistent ID feature is valuable for attribution accuracy
+- Strong Shopify-specific positioning ("The data layer for Shopify")
+- Lowest price point of any competitor reviewed
 
 **Weaknesses:**
-- **Not an attribution audit tool** — they make your tracking accurate, but they don't tell you if your ROAS is inflated. Accurate tracking of inflated attribution still shows inflated ROAS.
-- No in-dashboard overlay
-- Doesn't solve the double-counting or cannibalization problem — just ensures accurate data flows
+- Not an attribution tool — does not provide MTA, MMM, or attribution scores
+- Does not show an "Attribution Accuracy Score" or any overlay on ad dashboards
+- No Chrome extension
+- Meta / Google Ads integration is one-way (improves their tracking, doesn't validate their attribution)
+- No campaign-level optimization recommendations
+- Littledata sends better data to platforms — but those platforms still apply their own (potentially inaccurate) attribution models
 
-**Chrome Extension:** ❌ None
+**Chrome Extension / Delivery Mechanism:**
+None. Shopify app + server-side tracking only.
 
 ---
 
-### 1.5 Hyros
+### 5. Hyros
 
 **Website:** https://hyros.com
-**Pricing:** Not publicly listed; reported to start at **$2,000+/month** — premium pricing for high-volume brands
 
-**What they do:**
-Hyros uses AI to replace Google Analytics. They claim their AI tracking is so accurate it can predict which ads are generating revenue "better than Google Analytics." Their key pitch: their AI model learns your business and attributes conversions more accurately than any other tool.
+**Product Overview:**
+Hyros is an AI-powered ad attribution and tracking platform that positions itself as the highest-accuracy attribution tool available, claiming to be "proven to increase ad ROI by at least 15%." Hyros uses AI to model individual customer journeys and identify the true source of conversions, particularly in complex multi-touch, multi-channel environments. It also offers "AIR" — an AI remarketing agent that uses attribution data to personalize marketing at the individual visitor level.
 
-**How it works:** Web app only. Requires installation of their tracking system.
+**How It Works:**
+Hyros installs a tracking pixel on the Shopify store (claiming "1-click AI setup" for Shopify). It then tracks individual user journeys across all ad platforms and applies AI models to determine the "true" source of each conversion. Hyros claims its AI is specifically trained on e-commerce attribution and outperforms last-click, first-click, and even standard MTA models. The AIR agent further uses this data for personalized remarketing.
+
+**Pricing:**
+Hyros does not publish pricing on its website. Based on available reviews and industry knowledge, pricing starts at approximately **$500–$1,000/month** for e-commerce brands and scales upward significantly for high-volume spenders. Hyros is positioned as a premium product and is notably more expensive than Littledata. All plans require a sales call.
 
 **Strengths:**
-- Strong AI narrative
-- Some high-profile success stories (claimed ROAS improvements)
+- Strong AI positioning — "AI attribution" is a compelling narrative
+- AIR (AI remarketing agent) adds a second product layer on top of attribution
+- High-profile endorsements (Tony Robbins team, Alex Hormozi, Sam Ovens)
+- Claims 15%+ revenue lift on average (self-reported, with disclaimers)
+- Works across SaaS, e-commerce, call-based, and info/education businesses
 
 **Weaknesses:**
-- Very expensive ($2K+/month minimum)
-- No public pricing = low transparency
-- No Chrome extension
-- Less Shopify-native than Triple Whale
+- No Chrome extension or in-dashboard overlay
+- "AI attribution" is essentially a proprietary MTA model — it does not validate platform attribution, it replaces it with its own
+- No free tier; high price point
+- Setup claims ("1-click") are aspirational; real-world onboarding varies
+- No Shopify-specific depth beyond standard API integration
+- Does not specifically solve the "attribution accuracy" problem of Meta/Google over-crediting themselves
 
-**Chrome Extension:** ❌ None
-
----
-
-### 1.6 Google Analytics 4 (Free)
-
-**What it does:**
-GA4 offers built-in attribution modeling with data-driven attribution across channels. It tracks the full customer journey from first touch to conversion.
-
-**Why it's not a competitor (but is a threat):**
-
-GA4 is free and omnipresent. However:
-
-1. **Structural conflict of interest**: GA4 runs on Google's infrastructure and is designed to show Google Ads performance in the best light. Every attribution model in GA4 is tuned to serve Google's business interests (making you buy more Google Ads).
-
-2. **Platform blindness**: GA4 sees conversions that come through Google ads well, but when a user clicks Google → then Meta → then Organic → then converts, GA4 only sees the Google click as the "influential" interaction. It under-counts Meta's role because GA4 is not designed to give Meta credit.
-
-3. **Same limitation as ad platform native tools**: GA4 tells you what Google wants you to believe about Google Ads performance. It doesn't cross-reference against Shopify — it just processes the conversion data it has access to.
-
-4. **GA4's "data-driven attribution"**: This uses machine learning to allocate credit based on observed paths. But it's trained on Google's own click/conversion data — not Shopify's ground truth. If Meta's pixel misfires (iOS 14.5 issue), GA4 doesn't know. It processes incomplete data and presents it confidently.
-
-**Why merchants still need us:**
-Even accurate GA4 data, processed by Google's best model, still can't tell you if your Meta/Google double-counted the same conversions, or if your brand-search spend is cannibalizing organic sales. Google can only work with the data it sees — and it doesn't see Shopify.
+**Chrome Extension / Delivery Mechanism:**
+None. Web app + mobile apps for tracking dashboards only.
 
 ---
 
-## 2. Competitive Comparison Table
+### 6. Existing Chrome Extensions for Ad Attribution
 
-| Dimension | Triple Whale | Northbeam | Rockerbox | Littledata | Hyros | GA4 | **Our Product** |
-|-----------|-------------|-----------|-----------|------------|-------|-----|-----------------|
-| **Pricing** | $219-$1,849/mo | $299-$1,500+/mo | $100K+/yr | $99-$999/mo | $2K+/mo | Free | **$9.99/mo Pro** |
-| **Chrome Extension** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ Primary UX** |
-| **Shopify-Native** | ✅ | Partial | ❌ | ✅ | Yes | ❌ | **✅** |
-| **In-Dashboard Tool** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | **✅** |
-| **Open-Source** | ❌ | ❌ | ❌ | ❌ | ❌ | N/A | **✅ (Web App)** |
-| **Self-Serve** | ✅ (automatic) | ❌ (demo req) | ❌ | ✅ | Partial | ✅ | **✅** |
-| **No Sales Call Required** | ✅ | ❌ | ❌ | ✅ | Partial | ✅ | **✅** |
-| **Methodology** | Incrementality testing | MTA + MMM | Full MMM | Server-side tracking | AI model | Google's model | **Shopify ground truth** |
-| **Target** | SMB-mid market | Enterprise | Fortune 500 | Shopify SMBs | High-volume | Everyone | **Shopify SMB** |
-| **Free Tier** | Trial only | Trial only | ❌ | 30-day trial | Trial | ✅ | **✅ Free forever** |
+**Research query:** "chrome extension meta ads attribution" / "google ads attribution checker"
 
----
+**Findings:**
 
-## 3. Our Positioning: The Chrome Extension Differentiator
+There is a notable absence of Chrome extensions that perform independent attribution validation. The Chrome Web Store does contain a small number of peripheral tools:
 
-### The Key Insight
+1. **Tag Assistant (by Google)** — Verifies Google tag installation, but does not perform any attribution analysis or cross-reference with Shopify data.
 
-**Every single competitor is a web app you visit separately from your ad dashboards.** This means:
+2. **DataScout** — A Chrome extension used by some agencies for scraping ad library data from Meta and Google, but not for real-time attribution cross-referencing.
 
-1. User has to actively remember to open the tool
-2. User has to manually upload/connect data (except for Triple Whale's API integrations)
-3. The tool shows data in isolation — not in context of what they're looking at in the ad platform
+3. **SimilarWeb** — Provides estimated traffic and competitor data, but is not related to attribution accuracy.
 
-**We are the only tool that embeds itself inside the Meta Ads Manager and Google Ads dashboard.** The insight appears exactly where the user is making decisions.
+4. **BuiltWith** — Detects e-commerce tech stacks (including Shopify), but no attribution functionality.
 
-### Specific Competitive Advantages
+5. **Various "Ad Spy" tools** (PowerAdSpy, AdPeep) — For competitor ad creative intelligence, not attribution validation.
 
-**vs. Triple Whale ($219-$1,849/mo):**
-- We are **50x cheaper** ($9.99 vs $549 minimum)
-- We are **always present** in-dashboard, not a separate tool
-- Our free tier ($0) is a real free tier, not a trial
-- Trade-off: Triple Whale has incrementality testing (holdout experiments) which we don't — but for most SMBs, the basic de-dup + ROAS comparison is sufficient
+**Conclusion:**
+There is no existing Chrome extension that:
+- Reads ad platform dashboard data in real-time
+- Cross-references against Shopify order data via API
+- Displays an "Attribution Accuracy Score" overlay
 
-**vs. Northbeam ($1,500+/mo):**
-- We are **150x cheaper**
-- Completely self-serve (no demo required)
-- Trade-off: Northbeam has MMM+ and Apex (ad platform algorithm integration). We're focused on the audit use case, not budget optimization.
-
-**vs. Littledata ($99-$999/mo):**
-- Littledata is a tracking accuracy tool, not an attribution audit tool. We don't compete for the same use case — we're complementary.
-- We tell you if ROAS is inflated. Littledata ensures your pixels fire correctly.
-
-**vs. Hyros ($2K+/mo):**
-- We are **200x cheaper**
-- Trade-off: Hyros has AI tracking. We use Shopify ground truth which is more reliable than any pixel model.
-
-**vs. GA4 (Free):**
-- GA4's attribution is structurally conflicted (Google grades Google's homework)
-- We cross-reference against Shopify — real ground truth
-- Trade-off: GA4 is free. But free with the wrong methodology is expensive in bad decisions.
-
-### The "Always There" Moat
-
-The Chrome Extension can't be self-hosted. This is a strategic advantage:
-
-- Triple Whale/Northbeam/Rockerbox could theoretically replicate our extension idea, but it would require rebuilding their entire product architecture around in-dashboard UX rather than a web app
-- Our audit engine is fundamentally designed to run in-browser, reading page data — not a retrofit
-- Once merchants install the extension and get daily in-dashboard insights, switching cost is real (the extension becomes part of their daily workflow)
+This is a genuine whitespace. The extension delivery mechanism is itself a differentiator — all existing tools are server-side SaaS platforms. Delivering attribution validation directly in the browser, overlaid on the ad platform dashboards the user already lives in, is a novel approach.
 
 ---
 
-## 4. What Existing Chrome Extensions Exist?
+### 7. Google's Own Attribution Tools
 
-**Search results: "chrome extension meta ads attribution" / "google ads attribution checker"**
+#### GA4 (Google Analytics 4)
 
-Currently **no meaningful Chrome extensions** exist that do what we're planning. The closest:
+**Attribution Models Available:**
+GA4 offers data-driven attribution (the default), last-click, first-click, linear, time-decay, and position-based models. GA4's data-driven model uses machine learning to allocate credit based on observed conversion patterns, which is more sophisticated than last-click.
 
-- **Meta Business Extension** (official Meta tool): Lets you manage ad accounts, not analyze attribution
-- **Google Ads Editor** (desktop app): Campaign management, not attribution analysis
-- **Built-in browser devtools**: Can inspect network requests, but not meaningful for merchants
+**Accuracy and Limitations:**
 
-**No competitor offers in-dashboard attribution verification as a browser extension.** This is genuinely white space.
+| Limitation | Impact |
+|---|---|
+| GA4 uses Google's own conversion tag — it cannot see conversions that occur outside its tracking scope (e.g., phone orders, in-person purchases, Shopify checkout not reached via tracked link) | Systematic under-counting of total conversions |
+| GA4's model is trained on Google's own data, which already suffers from attribution bias toward Google channels | The "data-driven" model still skews toward Google |
+| iOS 14+ App Tracking Transparency (ATT) has reduced iPhone user data by 30–60% for many Shopify brands, making GA4's customer journey data incomplete | Less reliable for brands with significant iOS customer base |
+| GA4's model requires sufficient conversion volume to train — brands doing <100 conversions/month get unreliable outputs | Problematic for smaller Shopify D2C brands |
+| No Shopify-native integration — requires manual GTM or server-side setup | Data gaps between Shopify and GA4 |
+
+**Structural Conflict:**
+GA4 is owned by Google. Google's business model depends on ad spend. Any attribution model Google publishes — even the ML-based data-driven model — will systematically favor Google channels because:
+1. Google sees all Google Ads clicks and can match them to conversions
+2. Google has limited visibility into Meta, TikTok, or organic conversions that don't pass through Google systems
+3. Google's ML model trains on data where Google has the most complete picture
+
+#### Google Ads Attribution Reports
+
+**What They Show:**
+Google Ads reports show conversions attributed (by Google's chosen model) to Google Ads campaigns, ad groups, keywords, and ads. Available attribution models include: last click, first click, linear, position-based, time decay, and data-driven.
+
+**What They Hide:**
+
+| What Google Ads Reports DON'T Show | Implication for Shopify Brands |
+|---|---|
+| Conversions that occurred but were not preceded by a Google Ads click | Overlooks organic, Meta-driven, and direct traffic that influenced the purchase |
+| Cross-device journeys where the Google click was on mobile but conversion was on desktop | Under-counts Google Ads influence in some cases, over-counts in others |
+| View-through conversions attributed to Google Display/YouTube when the real influence was a Meta ad seen first | YouTube/Display attribution is unreliable |
+| The full customer journey — only shows the last Google touchpoint | Hides the true role of upper-funnel channels (TikTok, Meta awareness, podcast ads, etc.) |
+| Actual revenue — only shows tracked conversions (which are incomplete due to tracking gaps) | Revenue figures are systematically lower than true total revenue |
+
+**Structural Conflict:**
+Google Ads attribution is structurally conflicted because:
+
+1. **Incentive misalignment:** Google earns revenue when brands spend more on Google Ads. Reporting that Google Ads is NOT the most effective channel would reduce ad spend. Google's attribution reports will always, at minimum, show Google Ads performing adequately — they are not designed to produce objective third-party assessments.
+
+2. **Data ownership:** Google has complete data about Google Ads interactions. It has partial data about conversions that involve non-Google touchpoints. Any attribution model applied to this incomplete dataset will favor Google channels.
+
+3. **Pixel-based measurement:** Google Ads conversion tracking relies on pixels placed on Shopify checkout pages. These pixels fire on page load — they cannot verify whether a conversion was genuinely influenced by the Google ad or merely occurred after it. The pixel proves a click happened; it does not prove causation.
+
+4. **No third-party validation:** No independent tool is required to verify Google's numbers. Brands have no way to check whether Google's reported ROAS is accurate without using a third-party attribution platform.
+
+#### Meta Ads Manager Attribution
+
+Meta's attribution reporting suffers from identical structural conflicts:
+
+1. Meta reports conversions using its own pixel data on Shopify stores
+2. Meta's data is incomplete for iOS users (Facebook SDK tracking gap post-iOS 14)
+3. Meta has no visibility into conversions influenced by Google, TikTok, or organic channels that Meta did not touch
+4. Meta's attributed conversions often exceed actual Shopify orders because the Meta pixel fires on add-to-cart and checkout-initiated events even when no purchase follows
+5. Meta's cross-level reporting (campaign → ad set → ad) can show different conversion numbers depending on the attribution window selected
 
 ---
 
-## 5. Google Ads' Structural Conflict of Interest
+## Comparison Table
 
-### The Mechanism
-
-Google Ads reports show you the conversions Google counted. Google has a financial incentive to count conversions generously:
-
-1. **View-through attribution**: A user sees a Google Display ad, doesn't click, but later searches Google and clicks a Search ad, then buys. Google counts the Search ad click as the "last click" conversion. The Display ad gets credit too. The merchant sees 2 conversions for 1 purchase.
-
-2. **Cross-channel double counting**: Same merchant runs Google + Meta. A customer clicks Google → clicks Meta → buys. Google claims the conversion. Meta claims the conversion. Google Ads shows "converted users" who were already going to buy via Meta's touchpoint.
-
-3. **Last-click bias**: Google's attribution reports default to last-click, which always benefits Google (the last click is often a Google Search ad for brand terms that the user would have found anyway).
-
-### The Evidence
-
-- Meta publicly acknowledged iOS 14.5 ATT caused "approximately 20-30% overstatement" of conversion attribution
-- If Meta (a company whose revenue depends on ad spend) admits to 20-30% inflation under privacy pressure, imagine the inflation when their pixels work perfectly
-- Academic research on platform attribution bias consistently shows systematic over-attribution to the platform doing the reporting
-
-### Why GA4 Doesn't Solve This
-
-GA4's attribution models use Google's data + Google's methodology to interpret Google's role. GA4 cannot tell you:
-- Whether Google and Meta counted the same conversion
-- What fraction of "Google conversions" would have happened without any Google ads (organic baseline)
-- Whether your brand-search spend is cannibalizing organic traffic
-
-These require Shopify ground truth data. Google cannot access Shopify data (it's not in Google's ecosystem). **This is our structural moat.**
+| Feature | Triple Whale | Northbeam | Rockerbox | Littledata | Hyros | Google/Meta Native | **Our Product** |
+|---|---|---|---|---|---|---|---|
+| **Target Segment** | Enterprise | Mid-Market / Enterprise | Enterprise | SMB / Mid-Market | Mid-Market / Enterprise | All | SMB / Lower-Mid-Market |
+| **Pricing (est.)** | $500–$5K+/mo | $500–$10K+/mo | $5K–$50K+/mo | $49–$399/mo | $500–$1K+/mo | Free (built-in) | Free / $9.99 / $49 |
+| **Free Tier** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Chrome Extension** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **In-Dashboard Overlay** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Shopify Native Integration** | ✅ (API) | ✅ (API) | ✅ (API) | ✅ (App-level) | ✅ (API) | ❌ (manual) | ✅ (API) |
+| **Attribution Accuracy Score** | ❌ (shows attribution under own model) | ❌ (shows attribution under own model) | ❌ (shows methodology alignment) | ❌ (no attribution) | ❌ (AI attribution model, not accuracy score) | ❌ (inherently conflicted) | ✅ |
+| **Multi-Touch Attribution** | ✅ | ✅ | ✅ | ❌ | ✅ | Partial | ❌ (validates platform MTA) |
+| **Media Mix Modeling** | ✅ | ✅ (MMM+) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Incrementality Testing** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Real-Time Data** | ✅ (refreshed) | ✅ | ✅ | ✅ | ✅ | Real-time (but incomplete) | ✅ |
+| **Setup Complexity** | High (weeks) | Medium-High (days–weeks) | Very High (months) | Low (minutes) | Medium | Low | Low (minutes) |
+| **Validates Platform Attribution** | ❌ (replaces it) | ❌ (replaces it) | ❌ (replaces it) | ❌ (improves pixel data) | ❌ (replaces it) | N/A | ✅ |
+| **Agency / Reseller Model** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ ($49/client) |
 
 ---
 
-## 6. Key Takeaways
+## Our Positioning & Differentiation
 
-1. **Market is validated**: $80M+ VC funding, multiple players at scale, real merchant pain around inflated ROAS
+### The Core Differentiator: Third-Party Validation vs. Replacement
 
-2. **Nobody has a Chrome extension**: White space. Every competitor is a web app. This is our primary differentiation.
+All existing competitors (Triple Whale, Northbeam, Rockerbox, Hyros) operate on the same fundamental premise: **their attribution model is better than the platform's, so use theirs instead.** This requires brands to:
+1. Trust the new platform's methodology over their existing dashboards
+2. Invest weeks or months in setup and configuration
+3. Pay $500–$10,000+/month
+4. Accept that the new platform's numbers may differ from what they're used to seeing
 
-3. **Price gap is massive**: We can be 50-200x cheaper than incumbents and still have a profitable business because our architecture is lighter (browser extension + minimal backend vs. enterprise data pipelines)
+This creates a significant adoption barrier and a perpetual "who is right?" debate inside marketing teams.
 
-4. **Shopify ground truth is our moat**: All competitors use pixel/tracking data as their source. We're the only one using Shopify orders as ground truth. This is methodology differentiator, not just product positioning.
+**Our approach is fundamentally different: we don't replace platform attribution — we validate it.**
 
-5. **Littledata is not our competitor**: It's a tracking tool. We're an audit tool. We can potentially integrate with Littledata rather than compete.
+We show up directly in Meta Ads Manager and Google Ads as a Chrome extension overlay, read the same data the brand's marketers are already looking at, cross-reference it against actual Shopify order data (the source of truth), and compute an "Attribution Accuracy Score" that tells the brand: "Meta is claiming credit for X% of these conversions. Our analysis shows the real figure is closer to Y%."
 
-6. **Google's free tools are structurally conflicted**: "Don't let Big Tech grade their own homework" is not just a tagline — it's the actual reason the market exists. Every merchant who uses GA4's attribution data is trusting Google to be honest about Google's performance.
+### Positioning Statement
 
-7. **Chrome Extension is the distribution + lock-in mechanism**: Can't be self-hosted. Creates recurring engagement. Makes the product part of the merchant's daily workflow. No competitor can easily replicate this without rebuilding their product.
+> **Ad Attribution Auditor** is the only tool that shows Shopify D2C brands exactly how much credit Meta Ads and Google Ads are over-claiming — in real time, directly in the ad platform dashboards they already use, starting at free.
+
+### Key Differentiation Points
+
+1. **In-dashboard overlay (novel):** No competitor delivers a Chrome extension overlay. Every competitor requires users to leave their ad platform dashboards and log into a separate SaaS tool. Our overlay meets marketers where they already work.
+
+2. **Validation vs. replacement:** We don't ask brands to abandon their existing dashboards or trust a new attribution methodology. We give them an objective accuracy score that validates or challenges what they're seeing.
+
+3. **Frictionless onboarding:** No implementation project, no sales call, no 4–8 week setup. Install the extension, connect the Shopify API, and see your score immediately.
+
+4. **Pricing accessible to SMB:** Free tier for small brands, $9.99 Pro for growing brands, $49/month per-client for agencies. No competitor even approaches this price point.
+
+5. **The "attribution accuracy score" concept:** While competitors show attribution breakdowns under their own models, no competitor specifically frames the question as "how accurate is Meta/Google's own attribution?" — which is the question Shopify brands actually want answered.
 
 ---
 
-*Competitive Analysis v1.0 — 2026-04-15*
-*Sources: triplewhale.com, northbeam.io, littledata.io, hyros.com, G2.com, TrustRadius, workflowautomation.net, shopifyappauthority.com, dariomarkovic.com, attnagency.com*
+## Key Takeaways & Strategic Recommendations
+
+### Key Takeaways
+
+1. **The incumbent attribution tools are all server-side SaaS platforms.** None have a browser-based overlay product. The extension delivery mechanism is genuinely novel in this space and aligns with how Shopify D2C marketers actually work (living in Meta Business Manager and Google Ads).
+
+2. **No tool addresses the structural conflict directly.** Every competitor positions itself as "use our model instead of the platform's." This is a trust problem — brands have to believe the new tool is more accurate than the platform, which is a big ask without external validation. We solve this by making the platforms' own data + Shopify ground truth the validation source.
+
+3. **Littledata has the right Shopify-specific instinct but wrong product scope.** The Shopify D2C focus is correct; the data-layer-only approach misses the actual decision moment (when a marketer is looking at their ROAS in Meta Ads Manager).
+
+4. **Google and Meta's native attribution is structurally incentivized to over-credit themselves.** Every brand in our target segment is working with systematically inflated paid channel ROAS numbers. The magnitude of this inflation is the core value proposition.
+
+5. **Chrome extension whitespace is real.** Our research found no existing extension-based attribution tool. This is both an opportunity and a challenge — it's novel, so user education is needed, but there's nothing to compare us directly against in extension form.
+
+### Strategic Recommendations
+
+1. **Lead with the accuracy score, not attribution modeling.** Don't try to explain MTA methodology. Lead with: "Your Meta dashboard says ROAS is 4.2x. Our data says real ROAS is likely 2.8x–3.4x. Here's why." The gap is the story.
+
+2. **Target the Shopify agency channel aggressively for Agency tier.** Shopify-focused agencies managing 5–20 clients at $49/client generate $245–$980/month per agency. Agencies are the most motivated buyers and can become distribution partners.
+
+3. **Invest in the "why is my platform lying to me" content angle.** The structural conflict of platform attribution is widely understood by sophisticated marketers but never articulated clearly by tools. Be the tool that names the problem out loud.
+
+4. **Build a "calibration report" as a secondary deliverable.** For each client, generate a PDF that shows: (a) what Meta/Google claimed credit for, (b) what Shopify actually shows, (c) the delta. This becomes a sales asset and a retention tool.
+
+5. **Prioritize the Meta Ads Manager overlay first.** Meta's attribution over-crediting is more severe than Google's (Meta has more tracking gaps from iOS and less visibility into non-Meta touchpoints). Being right about Meta first establishes credibility before expanding to Google.
+
+6. **Consider Littledata as a potential integration or partnership target rather than competitor.** Littledata solves the data completeness problem; we solve the interpretation problem. Combined, they offer Shopify brands a complete solution: accurate data + accurate attribution analysis.
+
+---
+
+*End of Document*
