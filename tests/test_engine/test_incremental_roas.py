@@ -38,16 +38,19 @@ def test_zero_spend():
 
 def test_inflation_rate_negative_true_roas():
     """true_roas > reported_roas → inflation = 0.0 (capped)"""
+    # Spend=1, reported_rev=1 → reported_roas=1.0
+    # actual_rev=100/10conv, organic=0.5*10*1=5, incr_rev=95 → true_roas=95
+    # true_roas >> reported_roas → inflation = (1-95)/1 = -94 → capped at 0.0
     daily = pd.DataFrame({
-        "spend": [100],
-        "reported_revenue": [100],
-        "actual_revenue": [500],
-        "actual_conversions": [5],
+        "spend": [1],
+        "reported_revenue": [1],
+        "actual_revenue": [100],
+        "actual_conversions": [10],
         "spend_on": [True],
     })
     config = AuditConfig()
-    # organic_baseline=10 so organic_revenue is huge → true_roas < 0 → capped at 0
-    result = compute_incremental_roas(daily, organic_baseline=10.0, config=config)
+    result = compute_incremental_roas(daily, organic_baseline=0.5, config=config)
+    assert result.true_incremental_roas > result.reported_roas
     assert result.inflation_rate == 0.0
 
 
