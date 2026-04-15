@@ -127,10 +127,7 @@ def _organic_baseline(daily: pd.DataFrame) -> float:
     -------
     float : estimated avg daily organic conversions.
     """
-    if len(daily) < 7:
-        return 0.0
-
-    # --- Method 1: OLS regression ---
+    # --- Method 1: OLS regression (requires ≥ 60 days) ---
     baseline, method, r2 = _regression_baseline(daily)
     if method is not None:
         return max(0.0, baseline)
