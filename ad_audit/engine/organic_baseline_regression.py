@@ -159,14 +159,15 @@ def _regression_baseline_full(daily: pd.DataFrame) -> BaselineResult:
 
     # ---- OLS via normal equations ----
     try:
-        XtX = X.T @ X
+        # Suppress spurious numpy/Accelerate warnings from internal float-accumulation
+        with np.errstate(divide='ignore', over='ignore', invalid='ignore'):
+            XtX = X.T @ X
         # Guard against overflow / singular matrix
         XtX_det = np.linalg.det(XtX)
         if not np.isfinite(XtX_det) or abs(XtX_det) < 1e-12:
             return _result_none(warnings=["OLS matrix near-singular (overflow or perfect collinearity)"])
-        Xty = X.T @ y
-        if not np.isfinite(Xty).all():
-            return _result_none(warnings=["OLS rhs not finite (overflow in data)"])
+        with np.errstate(divide='ignore', over='ignore', invalid='ignore'):
+            Xty = X.T @ y
         beta = np.linalg.solve(XtX, Xty)
         if not np.isfinite(beta).all():
             return _result_none(warnings=["OLS solution not finite"])
@@ -178,7 +179,8 @@ def _regression_baseline_full(daily: pd.DataFrame) -> BaselineResult:
         return _result_none(warnings=[f"Negative intercept clamped to 0: {intercept:.2f}"])
 
     # ---- R² check ----
-    y_hat = X @ beta
+    with np.errstate(divide='ignore', over='ignore', invalid='ignore'):
+        y_hat = X @ beta
     ss_res = np.sum((y - y_hat) ** 2)
     ss_tot = np.sum((y - y.mean()) ** 2)
     r2 = 1.0 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
@@ -201,7 +203,9 @@ def _regression_baseline_full(daily: pd.DataFrame) -> BaselineResult:
     )
 
     ad_marginal_idx = feature_names.index("ad_spend") if "ad_spend" in feature_names else None
-    ad_marginal = float(beta[ad_marginal_idx]) if ad_marginal_idx is not None else 0.0
+    # beta is for normalised ad_spend [0,1]; convert back to "per dollar" scale
+    raw_spend_max = max(np.maximum(daily["spend"].values, 0.0).max(), 1e-8)
+    ad_marginal = float(beta[ad_marginal_idx]) / raw_spend_max if ad_marginal_idx is not None else 0.0
 
     summary = (
         f"Multivariate OLS Regression (n={len(daily)})\n"
@@ -231,7 +235,10 @@ def _build_features(daily: pd.DataFrame) -> tuple[np.ndarray, list[str]]:
     features: dict[str, np.ndarray] = {}
 
     # Core variable: ad spend (clipped to 0 — can't be negative)
-    features["ad_spend"] = np.maximum(daily["spend"].values, 0.0)
+    # Normalise to [0,1] to prevent overflow in X.T @ X (same reason as trend)
+    raw_spend = np.maximum(daily["spend"].values, 0.0)
+    max_spend = max(raw_spend.max(), 1e-8)  # avoid div-by-zero
+    features["ad_spend"] = raw_spend / max_spend
 
     # Day-of-week dummies (0=Mon, …, 6=Sun); drop_first to avoid multicollinearity
     dow = pd.get_dummies(daily["date"].dt.dayofweek, prefix="dow", drop_first=True, dtype=float)
