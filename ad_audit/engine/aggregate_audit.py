@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from scipy.stats import pearsonr
 
 from ad_audit.engine.models import AuditConfig, AuditMode, AuditResult
 from ad_audit.engine.deduplication import compute_deduplication
@@ -114,11 +113,133 @@ def _build_daily_merged(
 
 
 def _organic_baseline(daily: pd.DataFrame) -> float:
-    """Average daily Shopify conversions during spend-off periods."""
-    off = daily.loc[~daily["spend_on"], "actual_conversions"]
-    if off.empty:
+    """Estimate organic (non-ad) daily conversions.
+
+    Decision tree:
+    1. Regression-based (OLS): regress actual_conversions ~ spend.
+       Intercept = organic baseline when spend = 0.
+    2. Fallback: time-series interruption detection
+       (clear spend drop ≥ 7 consecutive days).
+    3. Spend-off day average (legacy fallback).
+    4. Zero if no data.
+
+    Returns
+    -------
+    float : estimated avg daily organic conversions.
+    """
+    if len(daily) < 7:
         return 0.0
-    return float(off.mean())
+
+    # --- Method 1: OLS regression ---
+    baseline, method, r2 = _regression_baseline(daily)
+    if method is not None:
+        return max(0.0, baseline)
+
+    # --- Method 2: Time-series interruption ---
+    baseline = _timeseries_interruption_baseline(daily)
+    if baseline is not None:
+        return max(0.0, baseline)
+
+    # --- Method 3: Legacy spend-off day average ---
+    off = daily.loc[~daily["spend_on"], "actual_conversions"]
+    if not off.empty and not off.isna().all():
+        return float(off.mean())
+
+    return 0.0
+
+
+def _regression_baseline(daily: pd.DataFrame) -> tuple[float, str | None, float]:
+    """OLS regression: actual_conversions ~ spend.
+
+    Requires:
+    - ≥ 60 days of data
+    - Spend variation: non-zero std and some zero-spend days
+    - Statistically significant, positively-sloped model
+
+    Returns
+    -------
+    (intercept, method_label, r2)  — method_label is None if conditions not met.
+    """
+    MIN_DAYS = 60
+    if len(daily) < MIN_DAYS:
+        return 0.0, None, 0.0
+
+    spend = daily["spend"].values
+    conv = daily["actual_conversions"].values
+
+    # Need spend variation and some zero-spend days for reliable intercept
+    if spend.std() < 1.0:
+        return 0.0, None, 0.0
+
+    zero_spend_days = np.sum(spend == 0)
+    if zero_spend_days < 3:
+        return 0.0, None, 0.0
+
+    # OLS using normal equations (no external dependency beyond numpy)
+    n = len(spend)
+    X = np.column_stack([np.ones(n), spend])
+    try:
+        # Solve X^T X beta = X^T y
+        XtX = X.T @ X
+        Xty = X.T @ conv
+        beta = np.linalg.solve(XtX, Xty)
+    except np.linalg.LinAlgError:
+        return 0.0, None, 0.0
+
+    intercept, slope = beta[0], beta[1]
+
+    # Intercept must be non-negative (organic baseline can't be negative)
+    # Slope should be positive (more spend → more conversions)
+    if intercept < 0:
+        return 0.0, None, 0.0
+
+    # R² check — require modest fit
+    y_hat = X @ beta
+    ss_res = np.sum((conv - y_hat) ** 2)
+    ss_tot = np.sum((conv - conv.mean()) ** 2)
+    r2 = 1.0 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
+
+    if r2 < 0.01:  # Nearly flat model — intercept ≈ mean, not informative
+        return 0.0, None, 0.0
+
+    return float(intercept), "regression", float(r2)
+
+
+def _timeseries_interruption_baseline(daily: pd.DataFrame) -> float | None:
+    """Time-series interruption detection for organic baseline.
+
+    Looks for a clear, sustained spend drop (spend_on=False) lasting ≥ 7
+    consecutive days. Computes the average conversions during those periods.
+
+    Returns None if no qualifying interruption is found.
+    """
+    MIN_INTERRUPTION_DAYS = 7
+
+    spend_on = daily["spend_on"].values
+    conv = daily["actual_conversions"].values
+    n = len(spend_on)
+
+    best_start = -1
+    best_len = 0
+    current_start = -1
+    current_len = 0
+
+    for i in range(n):
+        if not spend_on[i]:
+            if current_len == 0:
+                current_start = i
+            current_len += 1
+            if current_len > best_len:
+                best_len = current_len
+                best_start = current_start
+        else:
+            current_len = 0
+
+    if best_len >= MIN_INTERRUPTION_DAYS:
+        streak_convs = conv[best_start : best_start + best_len]
+        return float(streak_convs.mean())
+
+    return None
 
 
 def _incremental_per_day(daily: pd.DataFrame, organic_baseline: float) -> float:
@@ -130,21 +251,38 @@ def _incremental_per_day(daily: pd.DataFrame, organic_baseline: float) -> float:
 
 
 def _rolling_correlation(daily: pd.DataFrame, window: int) -> float:
-    """Mean of rolling Pearson r between spend and actual_conversions."""
+    """Mean of rolling Pearson r between spend and actual_conversions.
+
+    Vectorized implementation using pandas rolling + std/cov formula for Pearson r.
+    """
+    if len(daily) < 2:
+        return 0.0
+
+    spend = daily["spend"]
+    conv = daily["actual_conversions"]
+
     if len(daily) < window:
-        if len(daily) >= 3:
-            r, _ = pearsonr(daily["spend"], daily["actual_conversions"])
+        # Not enough rows for a full rolling window — use global correlation
+        if spend.std() > 0 and conv.std() > 0:
+            r = np.corrcoef(spend.values, conv.values)[0, 1]
             return float(r) if np.isfinite(r) else 0.0
         return 0.0
 
-    rs = []
-    spend = daily["spend"].values
-    conv = daily["actual_conversions"].values
-    for i in range(len(daily) - window + 1):
-        s = spend[i : i + window]
-        c = conv[i : i + window]
-        if s.std() > 0 and c.std() > 0:
-            r, _ = pearsonr(s, c)
-            if np.isfinite(r):
-                rs.append(r)
-    return float(np.mean(rs)) if rs else 0.0
+    # Vectorized rolling Pearson r:
+    # r = Cov(spend, conv) / (Std(spend) * Std(conv))
+    roll = daily[["spend", "actual_conversions"]].rolling(window=window)
+    roll_spend_mean = roll["spend"].mean()
+    roll_conv_mean = roll["actual_conversions"].mean()
+    # Covariance: E[(spend - mean_spend)*(conv - mean_conv)]
+    cov = (
+        (daily["spend"] - roll_spend_mean)
+        * (daily["actual_conversions"] - roll_conv_mean)
+    ).rolling(window=window).mean()
+    std_spend = roll["spend"].std()
+    std_conv = roll["actual_conversions"].std()
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rs = cov / (std_spend * std_conv)
+    rs = rs.replace([np.inf, -np.inf], np.nan).dropna()
+    valid_rs = rs[np.isfinite(rs)]
+    return float(valid_rs.mean()) if not valid_rs.empty else 0.0

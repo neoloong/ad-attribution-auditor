@@ -30,26 +30,25 @@ def compute_incremental_roas(
     spend_on_days = int(daily["spend_on"].sum())
 
     # Organic baseline revenue estimate: baseline conv rate * avg revenue per conversion * days
-    if daily["actual_conversions"].sum() > 0:
-        avg_rev_per_conv = (
-            daily["actual_revenue"].sum() / daily["actual_conversions"].sum()
-        )
-    else:
+    actual_conv_sum = daily["actual_conversions"].sum()
+    if pd.isna(actual_conv_sum) or actual_conv_sum == 0:
         avg_rev_per_conv = 0.0
+    else:
+        avg_rev_per_conv = daily["actual_revenue"].sum() / actual_conv_sum
 
     organic_revenue = organic_baseline * avg_rev_per_conv * spend_on_days
     incremental_revenue = max(0.0, actual_revenue_on - organic_revenue)
 
     reported_roas = reported_revenue / total_spend if total_spend > 0 else 0.0
     true_roas = incremental_revenue / total_spend if total_spend > 0 else 0.0
-    inflation = (
-        (reported_roas - true_roas) / reported_roas if reported_roas > 0 else 0.0
-    )
+    # Inflation: (reported - true) / max(reported, 0.01), capped to [0.0, 10.0]
+    inflation = (reported_roas - true_roas) / max(reported_roas, 0.01)
+    inflation = round(max(0.0, min(inflation, 10.0)), 4)
 
     return IncrementalROASResult(
         reported_roas=round(reported_roas, 4),
         true_incremental_roas=round(true_roas, 4),
-        inflation_rate=round(max(0.0, inflation), 4),
+        inflation_rate=round(inflation, 4),
         total_spend=round(total_spend, 2),
         reported_revenue=round(reported_revenue, 2),
         incremental_revenue=round(incremental_revenue, 2),

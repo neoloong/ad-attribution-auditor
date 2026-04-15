@@ -10,6 +10,19 @@ from ad_audit.engine.user_level_audit import (
 from ad_audit.engine.models import AuditConfig, AuditMode
 
 
+def test_match_empty_clicks():
+    """Empty clicks DataFrame should not crash, return 0 matches."""
+    purchases = pd.DataFrame({
+        'user_id': ['u1'],
+        'email_hash': ['h1'],
+        'timestamp': pd.to_datetime(['2024-01-03']),
+        'revenue': [100],
+    })
+    config = AuditConfig(attribution_window_days=7)
+    matched = _match_purchases_to_clicks(pd.DataFrame(), purchases, config)
+    assert len(matched) == 0
+
+
 def test_match_purchases_to_clicks():
     clicks = pd.DataFrame({
         "user_id": ["u1", "u2"],

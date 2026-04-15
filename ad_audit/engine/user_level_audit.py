@@ -104,6 +104,17 @@ def _match_purchases_to_clicks(
     1. fbclid / gclid exact match (if both have it)
     2. email_hash match with time-window constraint
     """
+    if clicks.empty:
+        return pd.DataFrame()
+    # Guard against empty DataFrames — return empty result matching the expected schema
+    if clicks.empty or purchases.empty:
+        return pd.DataFrame(
+            columns=[
+                "user_id", "email_hash", "timestamp", "revenue",
+                "click_time", "time_diff",
+            ]
+        )
+
     window = pd.Timedelta(days=config.attribution_window_days)
 
     # Build click columns list for merge

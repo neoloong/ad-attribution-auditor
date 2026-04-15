@@ -50,6 +50,36 @@ def test_incremental_per_day():
     assert incr == pytest.approx(10.0 - 4.0)  # avg([10,12,8]) - 4
 
 
+def test_organic_baseline_all_off_days_nan():
+    """All spend-off days have NaN actual_conversions → baseline 0.0"""
+    daily = pd.DataFrame({
+        "actual_conversions": [10.0, 12.0, np.nan, 8.0, np.nan],
+        "spend_on": [True, True, False, True, False],
+    })
+    baseline = _organic_baseline(daily)
+    assert baseline == 0.0
+
+
+def test_organic_baseline_all_spend_on():
+    """All days have spend_on=True → no off days to average → 0.0"""
+    daily = pd.DataFrame({
+        "actual_conversions": [10.0, 12.0, 8.0, 15.0],
+        "spend_on": [True, True, True, True],
+    })
+    baseline = _organic_baseline(daily)
+    assert baseline == 0.0
+
+
+def test_rolling_correlation_single_row():
+    """Single row → 0.0, not crash."""
+    daily = pd.DataFrame({
+        "spend": [100.0],
+        "actual_conversions": [5.0],
+    })
+    corr = _rolling_correlation(daily, 5)
+    assert corr == 0.0
+
+
 def test_rolling_correlation():
     daily = pd.DataFrame({
         "spend": [0, 0, 100, 100, 200, 200, 0, 0, 0, 0],
