@@ -9,6 +9,7 @@ from ad_audit.engine.models import AuditConfig, AuditMode, AuditResult
 from ad_audit.engine.deduplication import compute_deduplication
 from ad_audit.engine.cannibalization import compute_cannibalization
 from ad_audit.engine.incremental_roas import compute_incremental_roas
+from ad_audit.engine.organic_baseline_regression import estimate_organic_baseline
 
 
 def run_aggregate_audit(
@@ -38,7 +39,8 @@ def run_aggregate_audit(
     daily["spend_on"] = daily["spend"] >= config.spend_on_threshold
 
     # Organic baseline & incremental conversions
-    organic_baseline = _organic_baseline(daily)
+    baseline_result = estimate_organic_baseline(daily)
+    organic_baseline = baseline_result.baseline_daily
     incremental_per_day = _incremental_per_day(daily, organic_baseline)
 
     # Rolling Pearson correlation
