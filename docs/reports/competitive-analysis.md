@@ -336,9 +336,112 @@ We show up directly in Meta Ads Manager and Google Ads as a Chrome extension ove
 
 4. **Google and Meta's native attribution is structurally incentivized to over-credit themselves.** Every brand in our target segment is working with systematically inflated paid channel ROAS numbers. The magnitude of this inflation is the core value proposition.
 
-5. **Chrome extension whitespace is real.** Our research found no existing extension-based attribution tool. This is both an opportunity and a challenge — it's novel, so user education is needed, but there's nothing to compare us directly against in extension form.
+5. **Chrome extension whitespace is real, but one competitor exists.** Our research found no existing extension that does what we're building, BUT one relevant competitor was found: RedTrack Chrome Extension (see Section 7). We need to differentiate clearly from it.
 
-### Strategic Recommendations
+## 7. Chrome Extension Competitors: Direct Research Results
+
+Extensive search of Chrome Web Store and Google for "chrome extension meta google ads attribution" found the following:
+
+---
+
+### 7.1 RedTrack Chrome Extension ⚠️ Closest Competitor
+
+**URL:** https://www.redtrack.io/features/chrome-extension/
+**Chrome Web Store:** Yes
+**Pricing:** Starts at **$149/month** (event-based pricing model)
+
+**What it does:**
+> "See RedTrack's accurate conversion data instantly in Meta Ads Manager. No tab switching. No waiting for updates. Just real performance data where you work."
+
+RedTrack's Chrome Extension shows their attribution data directly overlaid in Meta Ads Manager — exactly the UX pattern we're proposing.
+
+**How it differs from our product:**
+| Dimension | RedTrack | Our Product |
+|-----------|---------|-------------|
+| **Primary user** | Affiliates, media buyers, performance marketers | Shopify D2C brands |
+| **Data source** | RedTrack's own attribution model (server-side tracking) | Shopify orders as ground truth |
+| **Methodology** | RedTrack's algorithm replaces platform attribution | Compare platform claims vs. Shopify truth |
+| **Attribution model** | Builds their own model, asks you to trust it | Uses Shopify as external validator — no model to trust |
+| **Target price** | $149+/month | $9.99/month |
+| **Setup** | Requires RedTrack account + integration setup | Paste Shopify API key, works immediately |
+| **Shopify-native** | Not Shopify-specific | Explicitly Shopify-native |
+
+**Key differentiation message vs. RedTrack:**
+> "RedTrack tells you what their model thinks is true. We tell you what actually happened in your Shopify store."
+
+RedTrack is trying to build a better attribution model. We are not building a model — we are using Shopify's order data as an independent external validator. This is fundamentally different.
+
+**Risk:** RedTrack could theoretically expand into the Shopify SMB market and add Shopify-native integration. However, their core business is affiliate/media buyer, not Shopify D2C, so product focus is unlikely to shift.
+
+---
+
+### 7.2 AdScope — Chrome Extension (Competitive Intelligence, NOT Attribution)
+
+**URL:** https://chromewebstore.google.com/detail/adscope
+**Pricing:** Free tier + Pro paid (amount not publicly listed)
+
+**What it does:** Spy on any Shopify store and Meta ads. Analyze competitor spending, find best products, track competitor ad strategies. Shows estimated ad spend, campaign performance signals, landing page detection, tech stack detection, and competitor tracking.
+
+**Why it's NOT a competitor:**
+AdScope is **competitive intelligence** — you use it to spy on what your competitors are doing. It does NOT audit your own ROAS, does NOT compare Meta/Google claims against Shopify orders, and does NOT tell you if you're over-counting conversions.
+
+It's the difference between "watching what your competitor spends" and "knowing if your ad platform is lying to you about your own results."
+
+---
+
+### 7.3 Google Tag Assistant — Chrome Extension (Tag Verification, NOT Attribution)
+
+**What it does:** Verifies that Google tags (Google Analytics, Google Ads, etc.) are firing correctly on your website.
+
+**Why it's NOT a competitor:**
+Google Tag Assistant confirms that tags fire. It has nothing to do with ROAS auditing or cross-platform attribution verification. It also doesn't verify whether Google Ads' attribution claims are accurate — it just checks if the tracking pixel loaded.
+
+---
+
+### 7.4 TrueROAS — Shopify App (Not Chrome Extension)
+
+**URL:** https://apps.shopify.com/trueroas
+**Pricing:** Not publicly listed (mentions "see all pricing options")
+**Reviews:** 4.6 stars, 44 reviews
+
+**What it does:** Tracks Shopify orders and attributes results to the correct Meta/Google/TikTok ad. Positions as AI-powered ad attribution. Includes customer journeys, creative breakdown, ads manager, profit tracking, and CAPI (Conversion API) integration.
+
+**Why it's NOT a direct competitor:**
+- **Not a Chrome Extension** — it's a Shopify App that requires installation and configuration
+- **Attribution model** — TrueROAS builds its own attribution model (like Triple Whale), not an audit layer
+- **Focus** — It's a full tracking and attribution suite, not an in-dashboard verification overlay
+- **Pricing** — Not publicly listed, suggesting it may be in the $149-500+/month range based on comparable tools
+
+The critical difference: TrueROAS tries to get attribution right. We tell you whether Meta and Google got attribution wrong.
+
+---
+
+### 7.5 WeTrack — Shopify App (Not Chrome Extension)
+
+**URL:** Listed on Shopify App Store, free plan available
+**Reviews:** 4.8 stars, 1,101 reviews
+
+**What it does:** Ad tracking platform for Shopify, connects to Meta/Google/TikTok. Free plan available, positioned as accessible option.
+
+**Why it's NOT a direct competitor:**
+Same as TrueROAS — it's a Shopify App for ad tracking, not an in-dashboard Chrome Extension for attribution auditing.
+
+---
+
+### Chrome Extension Competitive Summary
+
+| Extension | In-dashboard overlay? | Audits Meta/Google vs Shopify? | Shopify-native? | Price |
+|-----------|----------------------|--------------------------------|-----------------|-------|
+| **RedTrack** | ✅ Yes | ❌ No (uses their own model) | ❌ No | $149+/mo |
+| **AdScope** | ✅ Yes | ❌ No (competitive intel only) | ✅ Yes | Free/paid |
+| **Tag Assistant** | ✅ Yes | ❌ No (tag verification) | ❌ No | Free |
+| **Our Product** | ✅ Yes | ✅ Yes | ✅ Yes | $9.99/mo |
+
+**Bottom line:** RedTrack is the only real Chrome Extension competitor in the attribution space. But they are not doing what we're doing — they're building an attribution model, we're doing an audit. The positioning distinction is critical: "RedTrack tells you what they think is true. We tell you what actually happened in your store."
+
+---
+
+## 8. Strategic Recommendations
 
 1. **Lead with the accuracy score, not attribution modeling.** Don't try to explain MTA methodology. Lead with: "Your Meta dashboard says ROAS is 4.2x. Our data says real ROAS is likely 2.8x–3.4x. Here's why." The gap is the story.
 
