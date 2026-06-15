@@ -374,9 +374,9 @@ export default function MethodologyPage() {
             <a href="https://github.com/neoloong/ad-attribution-auditor" className="underline" target="_blank">
               github.com/neoloong/ad-attribution-auditor
             </a>
-            {" "}(Python Streamlit version) or the Next.js port at{" "}
-            <a href="https://github.com/neoloong/ad-attribution-auditor-next" className="underline" target="_blank">
-              the Next.js repo
+            {" "}(Python Streamlit version) or the Next.js version in the{" "}
+            <a href="https://github.com/neoloong/ad-attribution-auditor/tree/main/web" className="underline" target="_blank">
+              web/ directory
             </a>.
           </p>
         </section>

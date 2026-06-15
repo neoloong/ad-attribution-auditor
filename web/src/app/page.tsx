@@ -196,7 +196,7 @@ export default function LandingPage() {
               Try It Now <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
             <a
-              href="https://github.com/neoloong/ad-attribution-auditor-next"
+              href="https://github.com/neoloong/ad-attribution-auditor"
               target="_blank"
               className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
               rel="noreferrer"
@@ -231,11 +231,8 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>Ad Attribution Auditor — Open Source (MIT). Built for DTC brands who want the truth.</p>
           <p className="mt-1 space-x-4">
-            <a href="https://github.com/neoloong/ad-attribution-auditor-next" className="underline hover:text-foreground" target="_blank">
-              GitHub (Next.js)
-            </a>
             <a href="https://github.com/neoloong/ad-attribution-auditor" className="underline hover:text-foreground" target="_blank">
-              GitHub (Python)
+              GitHub
             </a>
             <Link href="/methodology" className="underline hover:text-foreground">Methodology</Link>
             <Link href="/upload" className="underline hover:text-foreground">Get Started</Link>
