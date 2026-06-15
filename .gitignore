@@ -39,5 +39,9 @@ coverage.xml
 # Streamlit
 .streamlit/secrets.toml
 
-# Claude Code
-.claude/
+# Next.js web app
+web/node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+web/.vercel

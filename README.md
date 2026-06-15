@@ -1,6 +1,33 @@
 # Ad Attribution Auditor
 
-*Don't let Big Tech grade their own homework.*
+<p align="center">
+  <strong>Don't let Big Tech grade their own homework.</strong><br>
+  An independent, open-source tool that audits ad platform attribution claims.
+</p>
+
+<p align="center">
+  <a href="https://ad-attribution-auditor-next.vercel.app"><img src="https://img.shields.io/badge/live-demo-green" alt="Live demo"></a>
+  <a href="https://github.com/neoloong/ad-attribution-auditor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/python-3.9+-blue" alt="Python 3.9+">
+  <img src="https://img.shields.io/badge/next.js-16-000000?logo=nextdotjs" alt="Next.js">
+</p>
+
+---
+
+## Two Flavors
+
+This repo contains **two implementations** of the same engine:
+
+| | Python (Streamlit) | Next.js (React) |
+|---|---|---|
+| **Directory** | `ad_audit/` + `pages/` | `web/` |
+| **Run** | `streamlit run app.py` | `cd web && npm run dev` |
+| **Strengths** | 70 tests, user-level audit, API connectors | Modern UI, Recharts dashboards, browser-side processing |
+| **Best for** | Data scientists, batch processing, API integration | DTC brands, live demo, client-side privacy |
+
+**[Live demo →](https://ad-attribution-auditor-next.vercel.app/dashboard?demo=true)**
+
+---
 
 An independent tool that audits ad platform attribution claims by cross-referencing **Meta Ads** and **Google Ads** reports against actual **Shopify** orders to calculate **true incremental ROAS**.
 
@@ -37,19 +64,23 @@ data/                # Sample CSVs for demo
 
 ## Quick Start
 
+### Python (Streamlit)
 ```bash
-# Clone
 git clone https://github.com/neoloong/ad-attribution-auditor.git
 cd ad-attribution-auditor
-
-# Set up environment
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-# Run the app
 streamlit run app.py
 ```
+
+### Next.js (Web App)
+```bash
+git clone https://github.com/neoloong/ad-attribution-auditor.git
+cd ad-attribution-auditor/web
+npm install
+npm run dev
+```
+Then open http://localhost:3000/dashboard?demo=true for the demo.
 
 Sample data is included in `data/` — upload the CSV files to try it immediately.
 
@@ -90,10 +121,14 @@ python -m pytest tests/ --cov=ad_audit
 
 ## Tech Stack
 
-- **Python 3.9+** / **Streamlit** (web UI)
-- **Pandas** (data processing) / **SciPy** (correlation analysis)
-- **Plotly** (charts) / **Jinja2** (HTML reports)
-- **OpenAI SDK** (LLM summaries)
+| Component | Python | Next.js |
+|---|---|---|
+| Language | Python 3.9+ | TypeScript |
+| UI | Streamlit | React 19 + shadcn/ui + Tailwind CSS v4 |
+| Charts | Plotly | Recharts |
+| Data | Pandas + SciPy | PapaParse + native TS |
+| AI | OpenAI SDK | (planned) |
+| Tests | pytest (70 tests) | eslint + tsc |
 
 ## License
 
