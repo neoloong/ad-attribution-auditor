@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "Ad Attribution Auditor — Don't let Big Tech grade their own homework",
   description:
     "Independent ad attribution auditing tool. Cross-reference Meta Ads & Google Ads against Shopify orders to calculate true incremental ROAS. De-duplication, cannibalization detection, and health alerts.",
+  icons: {
+    icon: "/favicon.svg",
+  },
   openGraph: {
     title: "Ad Attribution Auditor",
     description:
