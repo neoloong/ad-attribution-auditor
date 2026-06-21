@@ -32,8 +32,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (active && payload?.length) {
     const cannibalized = payload.find((p) => p.name === "Cannibalized")?.value === 1;
     return (
-      <div className="rounded-lg border bg-background p-2 shadow-sm text-sm">
-        <p className="font-medium">{label}</p>
+      <div className="rounded-xl border bg-background/95 backdrop-blur-sm p-3 shadow-lg text-sm">
+        <p className="font-medium mb-1">{label}</p>
         {payload.map((entry, i) => {
           if (entry.name === "Cannibalized") return null;
           return (
@@ -43,13 +43,19 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
           );
         })}
         {cannibalized && (
-          <p className="text-red-500 font-medium mt-1">Cannibalized Day</p>
+          <p className="text-red-500 font-semibold mt-1">Cannibalized Day</p>
         )}
       </div>
     );
   }
   return null;
 }
+
+const COLORS = {
+  conversions: "#3B82F6",
+  brandClicks: "#F59E0B",
+  cannibalized: "#EF4444",
+};
 
 export default function CannibalizationChart({ result }: Props) {
   if (!result.hasGSC) {
@@ -75,7 +81,7 @@ export default function CannibalizationChart({ result }: Props) {
     <div className="h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+          <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.1} />
           <XAxis
             dataKey="date"
             tick={{ fontSize: 12 }}
@@ -84,31 +90,46 @@ export default function CannibalizationChart({ result }: Props) {
             textAnchor="end"
             height={60}
           />
-          <YAxis />
+          <YAxis tick={{ fontSize: 13 }} />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
+          <Legend
+            verticalAlign="top"
+            wrapperStyle={{ fontSize: 13, paddingBottom: 8 }}
+          />
           {cannibalizedDates.map((date) => (
             <ReferenceLine
               key={date}
               x={date}
-              stroke="hsl(var(--destructive))"
-              strokeDasharray="3 3"
-              strokeOpacity={0.3}
+              stroke={COLORS.cannibalized}
+              strokeWidth={2}
+              strokeDasharray="4 4"
+              strokeOpacity={0.7}
+              label={{
+                value: "Cann.",
+                position: "top",
+                fill: COLORS.cannibalized,
+                fontSize: 9,
+                fontWeight: 700,
+              }}
             />
           ))}
           <Area
             type="monotone"
             dataKey="Conversions"
-            stroke="hsl(var(--chart-1))"
-            fill="hsl(var(--chart-1))"
-            fillOpacity={0.1}
+            stroke={COLORS.conversions}
+            fill={COLORS.conversions}
+            fillOpacity={0.15}
+            animationBegin={0}
+            animationDuration={1000}
           />
           <Area
             type="monotone"
             dataKey="Brand Clicks"
-            stroke="hsl(var(--chart-2))"
-            fill="hsl(var(--chart-2))"
+            stroke={COLORS.brandClicks}
+            fill={COLORS.brandClicks}
             fillOpacity={0.2}
+            animationBegin={200}
+            animationDuration={1000}
           />
         </AreaChart>
       </ResponsiveContainer>

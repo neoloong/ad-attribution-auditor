@@ -24,6 +24,7 @@ import {
   DollarSign,
   BarChart3,
   Target,
+  Clock,
 } from "lucide-react";
 import nextDynamic from "next/dynamic";
 
@@ -86,11 +87,18 @@ export default function DashboardPage() {
             </Link>
             <span className="font-semibold">Audit Dashboard</span>
           </div>
-          {auditResult.hasGSC ? (
-            <Badge variant="default">Full Audit</Badge>
-          ) : (
-            <Badge variant="secondary">No GSC Data</Badge>
-          )}
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {auditResult.dailyRows[0]?.date} —{" "}
+              {auditResult.dailyRows[auditResult.dailyRows.length - 1]?.date}
+            </span>
+            {auditResult.hasGSC ? (
+              <Badge variant="default">Full Audit</Badge>
+            ) : (
+              <Badge variant="secondary">No GSC Data</Badge>
+            )}
+          </div>
         </div>
       </header>
 
@@ -160,13 +168,15 @@ export default function DashboardPage() {
         )}
 
         {/* Charts */}
-        <Tabs defaultValue="roas" className="mb-8">
-          <TabsList>
-            <TabsTrigger value="roas">ROAS Comparison</TabsTrigger>
-            <TabsTrigger value="duplication">Duplication</TabsTrigger>
-            <TabsTrigger value="cannibalization">Cannibalization</TabsTrigger>
-            <TabsTrigger value="trends">Daily Trends</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="roas" className="mb-10">
+          <div className="border-b pb-0 mb-6">
+            <TabsList>
+              <TabsTrigger value="roas">ROAS Comparison</TabsTrigger>
+              <TabsTrigger value="duplication">Duplication</TabsTrigger>
+              <TabsTrigger value="cannibalization">Cannibalization</TabsTrigger>
+              <TabsTrigger value="trends">Daily Trends</TabsTrigger>
+            </TabsList>
+          </div>
           <TabsContent value="roas">
             <Card>
               <CardHeader>
@@ -222,7 +232,7 @@ export default function DashboardPage() {
         </Tabs>
 
         {/* Summary Stats */}
-        <Card>
+        <Card className="mt-10">
           <CardHeader>
             <CardTitle>Detailed Metrics</CardTitle>
           </CardHeader>
@@ -299,19 +309,22 @@ function KpiCard({
 }) {
   const variantStyles = {
     default: "",
-    success: "border-green-200 dark:border-green-800",
-    warning: "border-yellow-200 dark:border-yellow-800",
-    critical: "border-red-200 dark:border-red-800",
+    success:
+      "border-l-4 border-l-green-500 bg-gradient-to-br from-card to-green-50/30 dark:to-green-950/20",
+    warning:
+      "border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/30 dark:to-yellow-950/20",
+    critical:
+      "border-l-4 border-l-red-500 bg-gradient-to-br from-card to-red-50/30 dark:to-red-950/20",
   };
 
   return (
-    <Card className={variantStyles[variant]}>
+    <Card className={cn(variantStyles[variant], "hover:shadow-md transition-shadow")}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
           {icon}
         </div>
-        <CardDescription className="text-2xl font-bold text-foreground">{value}</CardDescription>
+        <CardDescription className="text-3xl font-bold text-foreground">{value}</CardDescription>
       </CardHeader>
       <CardContent>
         <p className="text-xs text-muted-foreground">{sub}</p>
