@@ -6,7 +6,7 @@ import streamlit as st
 import pandas as pd
 
 from ad_audit.ingestion.loader import load_csv
-from ad_audit.ingestion.validators import validate_schema
+from ad_audit.ingestion.validators import InvalidInputError, validate_schema
 from ad_audit.ingestion.normalizer import (
     normalize_meta_ads,
     normalize_google_ads,
@@ -31,18 +31,26 @@ def _upload_and_validate(label: str, schema_name: str, normalize_fn, state_key: 
     """Upload widget + validation for a single CSV type."""
     uploaded = st.file_uploader(f"Upload {label} CSV", type=["csv"], key=f"upload_{state_key}")
     if uploaded is not None:
-        df = load_csv(uploaded)
-        result = validate_schema(df, schema_name)
+        try:
+            df = load_csv(uploaded, source_name=uploaded.name)
+        except InvalidInputError as exc:
+            st.error("File rejected — could not be read reliably:\n\n" + "\n\n".join(exc.errors[:20]))
+            return
+        result = validate_schema(df, schema_name, source_name=uploaded.name)
+        for warning in result.warnings:
+            st.warning(warning)
         if result.valid:
-            normalized = normalize_fn(df)
+            normalized = normalize_fn(df, source_name=uploaded.name)
             st.session_state[state_key] = normalized
             st.success(f"{label}: {len(normalized)} rows loaded successfully.")
             with st.expander("Preview"):
                 st.dataframe(normalized.head(10), use_container_width=True)
-        else:
+        elif result.missing_required:
             st.error(f"Missing required columns: {result.missing_required}")
             if result.missing_optional:
                 st.warning(f"Missing optional columns: {result.missing_optional}")
+        if result.errors:
+            st.error("File rejected — invalid values:\n\n" + "\n\n".join(result.errors[:20]))
 
 
 # Load Sample Data button
