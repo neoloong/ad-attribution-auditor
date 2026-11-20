@@ -1,0 +1,537 @@
+Reading prompt from stdin...
+OpenAI Codex v0.167.0
+--------
+workdir: /Users/chao
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1c768-1d69-7eb0-8571-00a77ad088cf
+--------
+user
+# Fleet Task — Ad Attribution Auditor: Exploration #5 Shopify App Store path
+
+You are working on Mac-mini-M6-1. Work autonomously; do not ask questions.
+Write the deliverable to `~/dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md`
+(create the directory if needed). No commits or pushes. No contacting anyone,
+no account registration, no spending.
+
+## Product context (verified state, do not re-derive)
+
+- **Product**: Ad Attribution Auditor — Python OLS engine that audits a Shopify
+  brand's Meta/Google ad spend against its Shopify orders and reports true
+  incremental ROAS (platform-reported vs verified). Campaign-level joint
+  regression (intercept + per-campaign spend + day-of-week + trend), HC3 robust
+  95% CIs, four-label classification (positive / negative / practically-zero /
+  inconclusive), margin-parameterized break-even (break-even iROAS = 1/margin;
+  default assumed margin 40% → 2.50x threshold, printed in the report).
+  Delivery today is a manual service: seller sends 3 CSVs (Meta spend, Google
+  spend, Shopify orders), report back in 72h. A 5-screen clickable demo of the
+  self-serve funnel exists (landing → mock checkout → CSV upload → processing
+  → report) but is not deployed anywhere public.
+- **Validation state (2026-11-09, v2 calibration, 6 scenarios x 4,000 datasets)**:
+  estimator is calibrated when data is complete, spend is approximately
+  exogenous, and effects are immediate (realistic-noise scenario: coverage
+  96.0–96.4%). It fails confidently under endogenous brand spend (brand spend
+  following demand: +5.28x bias, coverage 0.05%) and under adstock carryover.
+  Honest product shape: inconclusive labels, minimum detectable effect (MDE)
+  and warnings are first-class; the report must never present a confident
+  number where the data cannot support one.
+- **Commercial state**: launch still BLOCKED pending Gate 2 (3–5 real-seller
+  free pilots, 0 so far; outreach needs the owner's approval, so do not send
+  anything). Direct-sale pricing decided: $99 / $199 / $399 (Premium $399).
+  Channel ranking so far: Upwork Project Catalog 4.5/5 (#1), direct sale 4.0
+  (#2), agency white-label 3.0 (#3, explored 2026-11-09 — Triple Whale and
+  Northbeam already sell incrementality, so our edge is a low-commitment
+  one-off agency-branded diagnostic report, not incrementality itself),
+  Shopify App Store 2.5/5 (unexplored — this task produces the evidence),
+  Fiverr 2.0 (deferred), API/MCP 2.0 (unexplored). Refund policy: first 10
+  orders, 7-day unconditional full refund; data insufficient / wrong numbers /
+  late delivery = full refund at any stage. Data retention: client CSVs deleted
+  30 days after delivery, reports kept 90 days.
+- **Adjacent finding (2026-11-09, Amazon/Walmart feasibility)**: Amazon Ads is
+  feasible only with added controls/format restrictions (retail search spend is
+  endogenous); Walmart Marketplace is constrained (search-report history cut to
+  62 days, Ads API partner-only) and Walmart 1P is blocked on data access.
+  Do not re-do that work; cite it only where it bears on the App Store
+  question (e.g. whether a Shopify app could also serve Amazon/Walmart sellers
+  is out of scope — keep this memo on the Shopify App Store itself).
+
+## Research tasks (all web research; cite a source URL for every number)
+
+1. **Listing mechanics and gating**: what does it actually take to list on the
+   Shopify App Store in 2026 — Partner account, app review requirements,
+   mandatory OAuth scopes, billing API, GDPR/webhooks, app-store listing
+   review timeline? Crucially: can a service whose core delivery is "seller
+   uploads 3 CSVs, we return a PDF report in 72h" even be listed as an app,
+   or does Shopify require an embedded app with real in-admin functionality?
+   What is the minimum a listing must do inside Shopify admin to pass review?
+   Mark anything that depends on review discretion as such.
+2. **Competitive landscape on the App Store**: survey the measurement /
+   attribution / incrementality apps actually listed (e.g. Triple Whale,
+   Northbeam, Lifetimely, SegMetrics, Littledata, or others you find) — for
+   each: pricing tiers, review count and rating, what it claims about
+   incrementality vs plain attribution, install/list positioning. Does any
+   listed app sell a one-off audit (as opposed to a monthly subscription)?
+   Note where our offer (one-off verified-incrementality report, not a
+   dashboard) is genuinely different from what is listed.
+3. **Pricing and billing norms**: how do analytics/measurement apps on the
+   store charge — monthly tiers, free-trial lengths, usage-based charges,
+   one-off charges via the Billing API? What revenue share does Shopify take
+   (verify the current figure from Shopify's own docs, with date)? What would
+   our $99/$199/$399 one-off tiers look like as App Store charges, and what
+   does the rev share do to the margin?
+4. **Fit analysis — the funnel problem**: our funnel is landing page →
+   pay → upload CSVs → 72h report. Map each step onto an App Store flow
+   (install → OAuth → billing → data access). Friction points to assess:
+   sellers expect an app to read their store data via API — can the app pull
+   the equivalent of our 3 CSVs (orders via API, ad spend still manual from
+   Meta/Google), or does the CSV-upload step survive? Does listing create an
+   expectation of a live dashboard / ongoing sync that our one-off audit does
+   not meet? Be concrete about what breaks and what survives.
+5. **Effort estimate**: rough engineering scope for a minimal viable App Store
+   presence — embedded app shell, OAuth + required scopes, Billing API
+   one-off charge, order-data pull (or CSV upload inside the app), report
+   delivery inside admin or by email. No code, just a scoped estimate
+   (rough size: days/weeks, and the riskiest unknowns, e.g. review rejection).
+6. **Discovery reality check**: how do sellers actually find measurement apps
+   — App Store search ranking factors, review-count thresholds that matter,
+   category placement? A new listing with 0 reviews: what is the realistic
+   path to first installs, and what does Shopify's own documentation say
+   about it? If discovery is effectively pay-to-play or review-gated, say so.
+7. **Recommendation**: re-score the Shopify App Store path (current 2.5/5)
+   with reasoning, and rank it against Upwork Catalog (4.5), direct sale
+   (4.0) and agency white-label (3.0). State what evidence would move the
+   score up or down, and whether the App Store is a launch channel, a later
+   credibility channel, or not worth pursuing.
+
+## Honesty rules (hard)
+
+- Every price, fee, statistic, and market claim carries a source URL and a
+  date or "as of" note. If you cannot verify a claim from a public source,
+  label it UNVERIFIED and do not present it as fact. Shopify's own docs
+  outrank blogs for fees, review rules, and billing mechanics.
+- Never invent clients, case studies, testimonials, revenue figures, or
+  review counts. If an app's review count is not visible, say so.
+- Do not contact any person or company, do not register any account, do not
+  spend money.
+
+## Deliverables
+
+- `~/dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md`: full
+  exploration in the style of a research memo — sections 1–7 above, with a
+  one-paragraph executive summary at the top and an explicit "unverified
+  items" list at the bottom.
+- Final stdout: concise summary — top finding per section, the re-scored
+  ranking, and the file path. This summary is the deliverable.
+
+codex
+I’ll check Shopify’s current rules and live competitor listings, then write the memo with dated sources and a recommendation grounded in the product’s current limits.
+exec
+/bin/zsh -lc pwd in /Users/chao
+ succeeded in 0ms:
+/Users/chao
+
+exec
+/bin/zsh -lc "rg --files -g AGENTS.md -g '*shopify*' -g '*agency*' -g '*amazon*' -g '*walmart*' dev/ad-attribution-auditor" in /Users/chao
+ succeeded in 0ms:
+dev/ad-attribution-auditor/validation/gate1-repair-2026-11-08/seed-20261110/shopify_orders.csv
+dev/ad-attribution-auditor/validation/gate1-synthetic-2026-11-08/shopify_orders.csv
+dev/ad-attribution-auditor/explorations/shopify-app-store.log
+dev/ad-attribution-auditor/explorations/2026-11-09-amazon-walmart-feasibility.md
+dev/ad-attribution-auditor/validation/gate1-repair-2026-11-08/seed-20261111/shopify_orders.csv
+dev/ad-attribution-auditor/validation/gate1-repair-2026-11-08/seed-20261112/shopify_orders.csv
+dev/ad-attribution-auditor/data/sample_shopify_orders.csv
+dev/ad-attribution-auditor/validation/gate1-repair-2026-11-08/seed-20261108/shopify_orders.csv
+dev/ad-attribution-auditor/validation/gate1-repair-2026-11-08/seed-20261109/shopify_orders.csv
+dev/ad-attribution-auditor/ad_audit/connectors/shopify_api.py
+dev/ad-attribution-auditor/tests/test_connectors/test_shopify_connector.py
+dev/ad-attribution-auditor/web/AGENTS.md
+
+web search: 
+exec
+/bin/zsh -lc 'ls -la AGENTS.md dev/AGENTS.md dev/ad-attribution-auditor/AGENTS.md' in /Users/chao
+ exited 1 in 0ms:
+ls: AGENTS.md: No such file or directory
+ls: dev/AGENTS.md: No such file or directory
+ls: dev/ad-attribution-auditor/AGENTS.md: No such file or directory
+
+web search: site.shopify.dev app store requirements embedded app minimum functionality services ...
+web search: 
+web search: site.apps.shopify.com triple whale Northbeam Lifetimely SegMetrics Littledata
+web search: 
+web search: site:apps.shopify.com "Triple Whale" "Pricing" ...
+web search: 
+web search: site:apps.shopify.com Northbeam attribution ...
+web search: 
+web search: https://apps.shopify.com/triplewhale-1?locale=en
+codex
+I found a useful precedent: DataGap lists a one-time tracking audit with downloadable reports. That supports one-off billing, but not necessarily our manual workflow. Shopify’s current rules require an interactive app that uses Shopify APIs and provides an embedded admin experience.
+web search: 
+web search: site:shopify.dev app review process submit review screencast timeline 2026 ...
+web search: 
+web search: site:apps.shopify.com "incrementality" "Triple" ...
+web search: 
+web search: site:shopify.dev/docs/apps "review process" "screencast" ...
+web search: 
+web search: https://shopify.dev/docs/apps/launch/built-for-shopify/requirements
+web search: 
+web search: site:shopify.dev/docs/apps "appOneTimePurchaseCreate" ...
+web search: 
+web search: site:apps.shopify.com/triplewhale-1 "Rating" ...
+web search: 
+web search: https://shopify.dev/docs/apps/launch/billing/one-time-charges
+web search: 
+web search: site:shopify.dev "Create one-time purchases" ...
+web search: 
+web search: 
+web search: 
+web search: 
+web search: site:shopify.dev "appOneTimePurchaseCreate" "confirmationUrl"
+web search: site:shopify.dev "Built for Shopify" "50" "reviews"
+web search: site:shopify.dev "Create one-time purchases"
+web search: site:shopify.dev "refund" "one-time" "app"
+web search: 
+web search: 'Pricing'
+web search: 
+web search: 
+web search: 
+web search: 
+web search: https://www.northbeam.io/pricing
+web search: Shopify app one time purchases Billing API appOneTimePurchaseCreate shopify.dev docs
+web search: 
+web search: site:shopify.dev "App Store review updates" "April" ...
+codex
+The main barriers are the build and acquisition work, not Shopify’s revenue share. Eligible small developers currently pay no revenue share below the lifetime threshold, though processing fees apply. The audit also needs order-history approval, data-handling controls, and enough functionality inside admin to justify an install; Shopify access won’t replace the Meta and Google spend uploads.
+web search: 
+web search: https://shopify.dev/docs/apps/launch/billing/manual-pricing/support-one-time-purchases
+exec
+/bin/zsh -lc 'git -C dev/ad-attribution-auditor status --short' in /Users/chao
+ succeeded in 0ms:
+ M ad_audit/engine/aggregate_audit.py
+ M ad_audit/engine/incremental_roas.py
+ M ad_audit/engine/models.py
+ M ad_audit/engine/organic_baseline_regression.py
+ M tests/test_engine/test_edge_cases.py
+ M tests/test_engine/test_phase2_boundaries.py
+?? ad_audit/engine/campaign_regression.py
+?? explorations/
+?? sample/
+?? scripts/gate1_pdf.py
+?? scripts/run_gate1_validation.py
+?? scripts/run_v2_validation.py
+?? scripts/verify_gate1_pdf.swift
+?? tests/test_engine/test_campaign_regression.py
+?? tests/test_engine/test_effect_labels.py
+?? tests/test_report/
+?? validation/
+
+web search: 
+web search: 
+web search: 
+web search: 
+web search: https://help.shopify.com/en/partners/manage-apps/refunds
+web search: site:community.shopify.dev/t/ "App Store review updates: New tools to speed up submissions"
+web search: site:shopify.dev identity verification Partners public app July 2026
+web search: https://apps.shopify.com/search?q=triple%20whale
+web search: 
+web search: 
+web search: 
+web search: 
+web search: site:shopify.dev/docs/apps "refund" "Partner Dashboard"
+web search: site:developers.facebook.com Marketing API insights ads_read
+web search: site:developers.google.com/google-ads/api access developer token OAuth reporting
+web search: site:apps.shopify.com incrementality measurement
+web search: 
+web search: 
+web search: 
+web search: https://developers.facebook.com/docs/marketing-api/insights/
+web search: https://shopify.dev/changelog/posts/shopify-app-store-submission-requirements-build-grow-then-expand
+web search: https://apps.shopify.com/workmagic
+web search: 
+web search: 'status'
+web search: 
+web search: site:shopify.dev "Partner apps must enable bulk operations before use"
+web search: 
+web search: https://shopify.dev/docs/apps/launch/app-store-review/app-listing-categories
+exec
+/bin/zsh -lc 'ls -ld dev/ad-attribution-auditor/explorations' in /Users/chao
+ succeeded in 0ms:
+drwxr-xr-x@ 4 chao  staff  128 Nov 10 13:40 dev/ad-attribution-auditor/explorations
+
+codex
+The evidence points to a later credibility channel rather than a launch channel. I’m drafting the memo with the one-off audit precedent, review risks, fee calculations, and a scoped build estimate. I’ll also flag conflicting Triple Whale listing responses and distinguish Shopify’s published rules from engineering and commercial judgments.
+apply patch
+patch: completed
+/Users/chao/dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md
+diff --git a/dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md b/dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..35d8e9cfc02ca7747912792ea8d29c3b9e5220fc
+--- /dev/null
++++ b/dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md
+@@ -0,0 +1,196 @@
++# Exploration #5 — Shopify App Store path
++
++**Research date: 2026-11-10. Product: Ad Attribution Auditor. Decision: defer App Store development; re-score from 2.5/5 to 2.0/5 for the current launch.**
++
++The Shopify App Store can support a one-off audit, but it is not a directory where we can list the existing CSV-and-PDF service unchanged. Shopify requires useful software integrated with its platform; an embedded audit workspace with order import, spend uploads, data checks, billing, job status, and report access is the defensible implementation. A relevant precedent exists: DataGap advertises a **$167 one-time tracking audit**, including downloadable reports, with **no reviews** visible. That supports the format, not demand for our offer or approval of a human-delivered audit. Fees are relatively favorable for an eligible small developer; engineering, review uncertainty, historical-order access, and acquiring the first merchants are the larger obstacles. Incrementality is already sold by measurement vendors, and our observational estimator cannot unconditionally “verify” causation. Recommend **2.0/5**, below Upwork Catalog, direct sale, and agency white-label; revisit as a later credibility and data-access channel after real-seller validation. Sources checked 2026-11-10: [Shopify app requirements](https://shopify.dev/docs/apps/launch/shopify-app-store/app-store-requirements), [DataGap listing](https://apps.shopify.com/datagap?surface_detail=store-management-operations-analytics&surface_inter_position=1&surface_intra_position=22&surface_type=category&surface_version=redesign), [Shopify revenue share](https://shopify.dev/docs/apps/launch/distribution/revenue-share), and [Northbeam pricing](https://www.northbeam.io/pricing).
++
++**Evidence conventions.** All external facts below are from public sources accessed on **2026-11-10**, unless an earlier publication or snapshot is specified. App prices are USD unless noted; they are public advertised prices, not quotes or verified checkout transactions. Store pages and search indexes can differ; discrepancies are identified rather than silently reconciled. Vendor capability statements are claims, not independent validation. No accounts were registered, installations performed, charges incurred, or people contacted.
++
++Product state, delivery promises, direct-sale prices, refund/retention policies, existing channel scores, and the Gate 2 pilot requirement are **GIVEN by the task**, not independently researched. They have no public source URL and are not represented as public market evidence. Build estimates, proposed workflows, fee arithmetic, and scores are explicitly **author estimates/calculations/judgments dated 2026-11-10**, not observed statistics. This memo does not re-test the engine or revisit Amazon/Walmart feasibility.
++
++## 1. Listing mechanics and gating
++
++### Can the current manual service be listed?
++
++**Not unchanged.** The requirements mandate an operational merchant UI, meaningful use of Shopify APIs, an embedded experience, immediate authentication on installation, and Shopify billing for app charges unless Shopify grants an exception. A listing that merely forwards the merchant to a payment page or a human service is a poor compliance proposition. There is no published minimum screen count or requirement for a continuously updating analytics dashboard. Whether a delayed, human-reviewed audit provides sufficient app functionality remains **review discretion**; Shopify reserves rejection discretion. Source, as of research date: [App Store requirements, especially functionality, platform integration, installation, and billing](https://shopify.dev/docs/apps/launch/shopify-app-store/app-store-requirements).
++
++**Proposed minimum functional product, not an approval guarantee:** inside admin, the merchant should be able to select the analysis period and margin, import store orders, upload ad exports, see date/currency/completeness problems, approve a clearly described audit purchase, submit the job, see its actual state, and open/download the completed report. Show the report's conclusions and caveats in the app as well as offering a PDF. Human analysis can happen behind this interface, but a static “we received your files” page with email-only fulfillment leaves substantially more review risk. This is an implementation judgment based on the rules above and the [one-off software audit precedent](https://apps.shopify.com/datagap?surface_detail=store-management-operations-analytics&surface_inter_position=1&surface_intra_position=22&surface_type=category&surface_version=redesign), not Shopify approval of this particular design.
++
++### Practical prerequisites
++
++| Gate | What it means for this product | Public source; status as of research date |
++|---|---|---|
++| Partner organization and public distribution | Use a Shopify Partner account and Dev Dashboard, accept platform terms, configure the app and development store, and register for App Store distribution. Registration is a **one-time $19 per Partner account**. An app serving unrelated merchants is not a single-merchant custom app workaround. No registration or payment was performed for this research. | [Shopify distribution and registration](https://shopify.dev/docs/apps/launch/distribution/revenue-share); [Partner agreement](https://www.shopify.com/partners/terms) |
++| Authentication | Prefer Shopify's supported embedded-app scaffold: managed installation, declared scopes, token exchange, App Bridge authentication, backend token storage and refresh. This satisfies the authorization workflow without hand-writing a legacy OAuth redirect implementation. Use expiring offline tokens for background order ingestion. | [CLI app authentication](https://shopify.dev/docs/apps/build/authentication-authorization/cli-app-authentication) |
++| Minimum data permissions | There is no universal “analytics app” scope bundle. Request only what is actually used. Our order-import path needs **`read_orders`**, and **`read_all_orders` plus approval** for history beyond the default **60 days**. `read_all_orders` alone is insufficient. No reason to request order writes, theme edits, or customer contact details for the aggregate audit. Billing does not imply `write_orders`. | [Access scopes and order permissions](https://shopify.dev/docs/api/usage/access-scopes) |
++| Protected customer data | Order records are protected customer data even when names/emails are omitted. Seek the applicable access review and implement data minimization, disclosed purpose, retention, and encryption. Excluding names, addresses, email and phone avoids requesting those identifying fields; it does not remove the protected-data gate. | [Protected customer data](https://shopify.dev/docs/apps/launch/protected-customer-data) |
++| Privacy webhooks | Implement **`customers/data_request`**, **`customers/redact`**, and **`shop/redact`**, even for an app claiming not to collect personal data. Verify signatures, acknowledge valid requests, reject invalid HMACs, and actually perform the requested action. Shopify specifies completion within **30 days**; shop redaction is sent **48 hours after uninstall**. | [Privacy law compliance](https://shopify.dev/docs/apps/build/compliance/privacy-law-compliance) |
++| Security and operations | Host a production service with HTTPS, tenant isolation, secured uploads/report downloads, secret management, uninstall handling, and deletion jobs. Shopify conducts security review; merely having a clickable demo is insufficient. | [Security requirements](https://shopify.dev/docs/apps/build/security/app-store-requirements); [Production readiness](https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review) |
++| Current security changes | Shopify's **2026-11-05** announcement requires IP allowlists: **2026-11-12, 11:59 PM ET** for bulk operations; **2026-11-20, 11:59 PM ET** for public-app listing/new installs. Plan compliant egress from the outset, including ASN configuration where appropriate. | [Official IP allowlist changelog](https://shopify.dev/changelog/posts/ip-allowlists-are-now-required-for-public-apps) |
++| Bulk ingestion, if used | Since **2026-11-06**, partner apps must enable bulk query access separately. It is lost after **31 days without use**. For an occasional audit product, handle this operationally or initially use paginated order queries; do not assume bulk access persists forever. | [Official bulk-operation access change](https://shopify.dev/changelog/posts/apps-must-enable-bulk-operations-before-use) |
++| Listing and review materials | Prepare truthful feature/pricing copy, support/privacy resources, screenshots, a complete screencast, clear test instructions, third-party test access where needed, and a reproducible completed report. Test charge acceptance/decline, reinstallation, and the whole outcome. | [App Store best practices](https://shopify.dev/docs/apps/launch/shopify-app-store/best-practices); [Pass app review](https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review) |
++
++**Retention consequence — author analysis:** our GIVEN deletion schedule is a maximum normal retention policy, not permission to ignore deletion requests. Apply redaction to raw uploads, derived order data, storage copies, and identifiable report content. An uninstall during an audit needs a clear operational path: stop future API access, honor deletion, and resolve fulfillment/refund without quietly retaining store data for the normal report period. Aggregate-only reporting reduces exposure but is not a blanket exemption. Basis: [Shopify privacy requirements](https://shopify.dev/docs/apps/build/compliance/privacy-law-compliance).
++
++### Submission and timing
++
++Production app review and listing review are both required; limited visibility does not avoid the requirements. Shopify documents submission states and remediation but does not provide a dependable approval-date SLA in the process page. [Review process](https://shopify.dev/docs/apps/launch/app-store-review/review-process), accessed 2026-11-10.
++
++A Shopify staff reply dated **2026-03-04** said time to review was approximately **30 days**; this was a queue update, not a permanent SLA or guaranteed total approval time. An official **2026-04-20** update introduced AI self-review and requirement-level dashboard feedback while retaining human review. Therefore budget weeks and possible resubmission, not a promised listing date. The current November queue duration is **UNVERIFIED**. Sources: [March staff update](https://community.shopify.dev/t/review-timeline-for-unlisted-shopify-app/29152), [April review-process announcement](https://community.shopify.dev/t/app-store-review-updates-new-tools-to-speed-up-submissions/33472).
++
++**Same-day policy change to include in planning:** Shopify announced on **2026-11-10** that partners may have only **one new app in review at a time**, and existing published apps need **10 installs on full-priced Shopify stores** before another new app can be submitted. This is not a requirement to obtain those installs before a first-ever app listing, and “paid stores” must not be confused with customers paying for the app. The announcement says app-submission identity verification will be required **soon**; its precise activation date is **UNVERIFIED**. Source: [Shopify announcement](https://community.shopify.dev/t/updates-to-app-store-submission-requirements-build-grow-then-expand/39596); corroborating [submission documentation](https://shopify.dev/docs/apps/launch/app-store-review/submit-app-for-review).
++
++Shopify also documents moving an app with **no active installs after at least six months** back to Draft, with a **90-day cooldown** before resubmission. A one-off product should not depend on an unused listing surviving indefinitely. This rule concerns active installs, not a published recurring-revenue quota. Source: [Ongoing app quality and usefulness checks](https://shopify.dev/docs/apps/launch/app-store-review/app-quality-checks), as of research date.
++
++## 2. Competitive landscape on the App Store
++
++**Survey scope:** selected relevant public listings, not an exhaustive market census. Every row below is a snapshot retrieved on 2026-11-10. Review counts describe visible reviews, not installations, paying customers, revenue, or measurement validity. No install totals or search positions are inferred. “No incrementality claim” means no explicit causal-testing claim in the inspected listing text, not proof the vendor lacks other products.
++
++| App and source | Visible pricing / trial | Rating and review count | Claims and install/list positioning |
++|---|---|---|---|
++| [Lifetimely Profit Analytics](https://apps.shopify.com/lifetimely-lifetime-value-and-profit-analytics); [USD listing snapshot](https://apps.shopify.com/lifetimely-lifetime-value-and-profit-analytics?ot=2b729f8c-2b7d-4bf9-854c-0c06ac30c345&surface_detail=category-ads&surface_intra_position=3&surface_type=category&surface_version=redesign) | Free; S **$49/month** for up to **500 orders/month**; M **$149/month** up to **3,000**; L **$299/month** up to **7,000**. Paid tiers show a **14-day trial**. One retrieval localized prices to INR; USD values come from the linked USD snapshot. No free-tier order limit assumed. | **4.9; 610 reviews** on the canonical page. | Installable profit/LTV/cohort and real-time P&L product, Analytics positioning, custom dashboards and reports. No explicit causal incrementality-testing claim in the inspected description. |
++| [Littledata — The Data Layer](https://apps.shopify.com/littledata) | Flex: free install, **$0.35/tracked order**, no monthly minimum. Scale **$199/month**, **1,500 included orders**, then **$0.15/order through 3,000**, **$0.06 above**. Plus **$990/month** or **$9,504/year**, **10,000 included**, then **$0.03/order through 50,000**, **$0.02 above**. **30-day trials** shown. | **4.8; 147 reviews**. | Installable; Built for Shopify badge; Analytics/Ads. Server-side tracking/data layer and signals for ad/email tools. A gallery image makes an incremental-email-revenue claim, but that is not a general campaign iROAS audit or proof of causal identification. |
++| [SegMetrics](https://apps.shopify.com/segmetrics) | Ecom Intelligence **$197/month**; Ecom Business **$397/month**; both show **14-day trials** and an external-billing notice. Contact allowances are internally inconsistent in the displayed Business card, so not relied on here. | **0.0; 0 reviews**; “No reviews yet,” not evidence of poor performance. | Installable Analytics listing; unified attribution/customer journeys and dashboards. No explicit experimental incrementality method in the inspected copy. |
++| [Northbeam](https://apps.shopify.com/north-beam) | **Free to install**, additional/external charges; individual plans based on pageviews and refresh cadence. Listing does not publish paid dollar tiers or a trial. [Vendor pricing](https://www.northbeam.io/pricing) displays Starter **$1,500** with an ambiguous period label, Professional **$3,500/month**, and custom Growth/Enterprise. Do not call Starter a verified monthly App Store tier. | **5.0; 3 reviews**. | Installable Analytics listing emphasizes first-party multi-touch attribution, ROAS/LTV, dashboards and alerts. Vendor pricing separately advertises optional incrementality on Professional/Enterprise; the store's sparse pricing is not evidence of a free measurement service. |
++| [Polar: AI Platform for commerce](https://apps.shopify.com/polar-analytics) | Core from **$750/month**, based on online GMV; annual discounts mentioned without a fixed public percentage. No trial duration shown in inspected pricing. External-billing notice. | **4.9; 116 reviews**. | Installable Analytics/Ads product, consolidated data, dashboards, attribution and profit metrics. A merchant review mentions incrementality, but that review alone does not establish methodology, packaging, or inclusion in Core. |
++| [WorkMagic Attribution](https://apps.shopify.com/workmagic) | Free install; **custom Enterprise pricing**; no public paid dollar tiers or trial duration. | **5.0; 5 reviews** in the retrieved listing; older indexed variants show a different count. | Installable, Ads positioning. Explicitly sells incrementality-based attribution, incrementality tests, channel connections, and measurement dashboards. A direct counterexample to “incrementality is missing from the Store.” |
++| [DataGap](https://apps.shopify.com/datagap?surface_detail=store-management-operations-analytics&surface_inter_position=1&surface_intra_position=22&surface_type=category&surface_version=redesign) | **$167 one-time charge**. No trial shown. | **0.0; 0 reviews**. | Install button; Analytics/custom reports. Read-only connection, tracking-gap audit, immediate web report plus PDF/Markdown exports. A genuine one-off audit listing, but it audits instrumentation rather than incremental ad effects. Not evidence of manual fulfillment or sales volume. |
++| [Triple Whale canonical page](https://apps.shopify.com/triplewhale-1); [indexed listing variant](https://apps.shopify.com/triplewhale-1?st_source=autocomplete%2F%3Futm_source%3Dblog&surface_detail=customer-account&surface_inter_position=1&surface_intra_position=21&surface_type=app_group&surface_version=simplified) | **Current listing pricing UNVERIFIED.** Search-indexed copy advertises Free, Foundation **$219/month** or **$2,190/year**, Automate **$749/month** or **$7,490/year**. The opened canonical and variant pages instead say unavailable. Treat these as indexed prices, not a verified currently purchasable offer. | **Current count/rating not visible** in the unavailable response; cached review pages conflict, so no current count asserted. | Current installability **UNVERIFIED**: opened page says “not currently available.” Reason and permanence unknown. The vendor remains a measurement competitor: [its help article](https://kb.triplewhale.com/en/articles/12441418-incrementality-testing-in-triple-whale), dated **2026-09-22**, describes Enterprise GeoLift and Meta Conversion Lift. Do not infer the vendor has ceased operating or that its index entries prove an active install path. |
++
++**Answer to the one-off question: yes, a listed one-off audit was found.** DataGap is an important correction to the assumption that every relevant Store product must be a subscription. It is not an exact substitute and its visible listing does not validate merchant willingness to buy our report. Source: [DataGap public listing](https://apps.shopify.com/datagap?surface_detail=store-management-operations-analytics&surface_inter_position=1&surface_intra_position=22&surface_type=category&surface_version=redesign), as of research date.
++
++**Our real differentiation — author assessment:** a bounded purchase with a campaign-level diagnostic, visible uncertainty/MDE, explicit break-even assumptions, and a deliverable that can be handed to an owner or agency. It avoids committing to an ongoing analytics suite. It is neither unique in selling incrementality nor unique in selling one-off reports. No exact one-off causal ad-audit substitute was verified in this selected survey; that is a bounded search result, not a claim that none exists.
++
++**Positioning correction:** do not advertise “verified incrementality” as an unconditional property. The GIVEN validation shows that endogenous spend and carryover can produce confidently wrong estimates. Shopify order reconciliation can verify the input revenue; it cannot establish that ad spend caused it. Prefer “one-off ad-spend diagnostic with conditional incremental-ROAS estimates, uncertainty, and data-quality warnings.” Experimental holdout products are not methodologically equivalent to our observational regression merely because both use the word incrementality.
++
++## 3. Pricing and billing norms
++
++The inspected cohort illustrates several patterns: monthly profit/order tiers (Lifetimely), fixed monthly plans (SegMetrics), order-based usage plus base subscriptions (Littledata), GMV-based recurring pricing (Polar), custom/external pricing (Northbeam/WorkMagic), and an explicit one-time audit (DataGap). Published trials in this cohort range from **14 to 30 days**, with sources in the corresponding rows above. This is a sample description, not a quantified Store-wide norm. A “free to install” badge must not be read as a free service.
++
++**Mechanism:** Shopify App Pricing is the default for new public apps with supported subscription/usage models, but currently does **not** support one-time app purchases. Shopify explicitly directs that case to **Manual Pricing using the Billing API**. Existing external-billing notices are not permission for our new app to use Stripe; do not assume another vendor's exception applies. Sources, as of research date: [Billing model selection](https://shopify.dev/docs/apps/launch/billing), [App Store billing requirement](https://shopify.dev/docs/apps/launch/shopify-app-store/app-store-requirements).
++
++For our GIVEN **$99 / $199 / $399** offers, implement separate audit purchase choices, each creating an **`appPurchaseOneTimeCreate`** charge with its description, amount/currency and return URL. The returned confirmation URL sends the merchant to Shopify approval. Confirm the actual purchase state server-side before releasing paid work; a browser returning to the app is not sufficient evidence. Bind purchase entitlement to a specific shop and audit, prevent duplicates on retries, and restore the existing purchased report after reinstall. A repeat audit should require a new explicit purchase, not an accidental recurring subscription. Shopify's API describes one-time app services and professional-service/setup charges, so the payment primitive fits even though the app's overall approval remains separate. Sources: [One-time purchase guide](https://shopify.dev/docs/apps/launch/billing/manual-pricing/support-one-time-purchases), [current mutation reference](https://shopify.dev/docs/api/admin-graphql/latest/mutations/appPurchaseOneTimeCreate), accessed 2026-11-10.
++
++### Fees and margin
++
++As of **2026-11-10**, Shopify's standard eligible-developer schedule is **0% revenue share on the first $1,000,000 lifetime gross app revenue earned from 2025-01-01**, then **15% above it**, plus a separate **2.9% processing fee**. The threshold aggregates apps/associated developer accounts, not each new app separately. Developers with at least **$20,000,000 prior-year Store revenue** or at least **$100,000,000 gross company revenue** pay **15% on all app revenue**. Applicable taxes and country-specific regulatory operating fees can also apply. The owner's actual aggregate eligibility was not inspected. Sources: [Shopify revenue-share schedule](https://shopify.dev/docs/apps/launch/distribution/revenue-share), [Partner agreement](https://www.shopify.com/partners/terms).
++
++**Calculated fee illustration, dated 2026-11-10:** below, processing and revenue share are applied separately to gross price. This excludes taxes, regional surcharges, refunds, hosting, labor, support and acquisition. It is proceeds after modeled platform fees, not business profit. Input prices are GIVEN; fee inputs are the [official Shopify schedule](https://shopify.dev/docs/apps/launch/distribution/revenue-share).
++
++| One-off tier | Processing at 2.9% | Net at 0% revenue share | Revenue share at 15% | Net at 15% revenue share |
++|---|---:|---:|---:|---:|
++| $99 | $2.87 | $96.13 | $14.85 | $81.28 |
++| $199 | $5.77 | $193.23 | $29.85 | $163.38 |
++| $399 Premium | $11.57 | $387.43 | $59.85 | $327.58 |
++
++Calculated retention is **97.1%** of price in the initial eligible band and **82.1%** at the modeled higher share. Contribution is `price × (1 − processing rate − revenue-share rate) − fulfillment − hosting/support − acquisition − refund losses`. The product's GIVEN assumed merchant gross margin is an input to its break-even iROAS analysis, **not** our service margin. Direct sale also has payment costs; without its actual processor terms, no net channel-cost advantage is claimed.
++
++**Refund fit:** keep the GIVEN first-orders unconditional refund promise and the insufficient-data/wrong/late refund triggers. Shopify permits paid-charge refunds through the Partner Dashboard; unpaid charges require a credit instead. Processing fees are **not returned** on refunds. On a fully refunded modeled purchase, the processing amounts in the table remain a cost before labor. A future implementation must distinguish returning money from granting future app credit; the latter alone does not satisfy the product promise. Source: [Refund app charges](https://shopify.dev/docs/apps/launch/billing/billing-adjustments/refund-app-charges), as of research date. Nothing was charged or refunded during this research.
++
++## 4. Fit analysis — the funnel problem
++
++**Proposed flow — author design, dated 2026-11-10:** `listing → install/authorize → embedded eligibility and data intake → Shopify charge approval → audit queue → in-admin result/PDF`. The commercial outcome can survive, but the current pay-before-upload sequence should change to identify obvious data insufficiency before billing.
++
++| Existing step (GIVEN) | App Store implementation proposal | What breaks / what survives |
++|---|---|---|
++| Landing page | Public listing plus optional educational landing page linking to the listing; example report, limits, eligibility, delivery terms and one-off pricing. | Value proposition survives. Listing copy must make the asynchronous, finite scope clear before installation. The existing unpublished demo is supporting explanation, not production functionality. |
++| Pay | Install and Shopify authorization first; let the merchant inspect scope and data eligibility, then choose and approve the audit charge. | Generic direct checkout is replaced by Shopify app billing. Install consent and charge approval are separate decisions. Staff without billing permission may need an authorized colleague. |
++| Upload Shopify orders | Request read access, retrieve the chosen period, normalize to the engine's order schema, reconcile totals, and show coverage. Offer order CSV fallback for historical-access problems, with provenance shown. | API import can eliminate the Shopify export/upload. It creates a data-access/reconciliation obligation and does not itself remove the ad uploads. |
++| Upload Meta/Google spend | Retain separate campaign-by-day exports and validate them inside the app. | The merchant still has manual work. Shopify authorization is not authorization to read the merchant's independent advertising accounts. Full spend connectors are additional integrations, outside the minimal scope. |
++| Processing | Show real states: awaiting files, data issue, queued, analyst review, ready, or refunded. Start the GIVEN delivery clock when complete valid inputs are accepted and state that trigger explicitly. | Human review and the GIVEN 72-hour turnaround can survive; an invented progress animation cannot substitute for job tracking. Listing acceptance of this delay remains discretionary. |
++| Report | Display summary, classification, uncertainty, margin assumption and warnings inside admin; provide secured PDF access and optional completion email. | A finite artifact survives. Admin report access is more defensible than email-only delivery; email is an additional notification/delivery option. Uninstall and deletion must have a defined effect on access. |
++
++Technical basis for the proposed install/billing flow: [Shopify scaffold authentication](https://shopify.dev/docs/apps/build/authentication-authorization/cli-app-authentication), [one-time purchase guide](https://shopify.dev/docs/apps/launch/billing/manual-pricing/support-one-time-purchases), and [one-time purchase object and staff authorization](https://shopify.dev/docs/api/admin-graphql/latest/objects/AppPurchaseOneTime), accessed 2026-11-10.
++
++### Can Shopify supply the equivalent input data?
++
++**Orders: broadly yes, subject to access and semantic reconciliation.** GraphQL order records expose timestamps, amounts/currencies, cancellations, discounts, taxes, shipping and refund-related information. Build a deterministic mapping to the audit's chosen revenue definition; do not blindly treat total order value as the same as the CSV revenue metric. Specify store timezone, reporting currency, test-order exclusion, refund timing, and date boundaries. Reconcile the imported daily totals against the seller's corresponding Shopify export/report during pilots. The source supports field availability, not that our mapping already works: [Order API reference](https://shopify.dev/docs/api/admin-graphql/latest/objects/Order), as of research date.
++
++**History is a real gate:** unapproved API access is limited to the default **60-day** order window. Longer analysis periods require the separately approved scope described in section 1 or an explicit CSV fallback. Do not silently truncate the audit or present the shorter window as the requested full history. Source: [Shopify order permissions](https://shopify.dev/docs/api/usage/access-scopes), accessed 2026-11-10. The engine's required window should be established by data sufficiency/MDE, not a convenient API limit.
++
++**Ad spend: the two uploads survive in the minimum product.** We did not verify a Shopify endpoint granting arbitrary access to the seller's full Meta/Google campaign-by-day spend and platform-reported metrics. Google's official documentation separately requires Google account authorization and production API access; Shopify installation does not grant it. Meta documentation fetches were rate-limited, so exact current Meta permissions/review requirements are **UNVERIFIED** and not specified here. Sources: [Google Ads authorization](https://developers.google.com/google-ads/api/docs/oauth/overview), [current Google API access policy](https://developers.google.com/google-ads/api/docs/api-policy/access-levels), [Meta Insights documentation attempted](https://developers.facebook.com/docs/marketing-api/insights/), accessed 2026-11-10.
++
++There is a narrower Shopify exception: an official **2026-08-10** announcement exposes **Shop Campaigns** performance through ShopifyQL. It does not establish access to all independent Meta/Google campaigns and therefore does not replace our required exports. Source: [Shop Campaigns analytics announcement](https://changelog.shopify.com/posts/see-shop-campaigns-performance-in-your-analytics-tools).
++
++**Expectation mismatch — inference from the surveyed listings, not merchant interview evidence:** live tracking, connected channels and dashboards recur throughout the cohort. A seller who installs our app could reasonably expect automatic spend sync or an immediate answer. Counter that before purchase with explicit copy: one audit, manual ad exports, human review, no automatic ongoing measurement, and possible inconclusive results. Will merchants accept that tradeoff? **UNVERIFIED until pilots.** API-connected orders reduce intake friction; they do not fix endogeneity, omitted demand controls, adstock, or causal identification.
++
++## 5. Effort estimate
++
++**Author planning estimate, 2026-11-10; not an externally verified benchmark or delivery commitment.** Assumes one engineer familiar with web apps, a reusable Python reporting engine, supported Shopify scaffold, one merchant store per audit, manual ad exports, and no ongoing dashboard/ad-platform connectors. Estimates cover a production review candidate, not the existing clickable demo. These numerical ranges have no public empirical source; they are **UNVERIFIED estimates**, with the linked docs defining the scope.
++
++| Work package | Estimated engineering days | Scope basis |
++|---|---:|---|
++| Embedded shell, install/auth, sessions, uninstall/reinstall, basic tenant model | 3–5 | [Shopify authentication scaffold](https://shopify.dev/docs/apps/build/authentication-authorization/cli-app-authentication) |
++| One-time tier selection, approval/state handling, idempotency, entitlement restoration, operational refunds | 2–3 | [One-time billing](https://shopify.dev/docs/apps/launch/billing/manual-pricing/support-one-time-purchases); [refunds](https://shopify.dev/docs/apps/launch/billing/billing-adjustments/refund-app-charges) |
++| Order import, paging, history-scope handling, normalization and reconciliation | 3–5 | [Orders](https://shopify.dev/docs/api/admin-graphql/latest/objects/Order); [scope approval](https://shopify.dev/docs/api/usage/access-scopes) |
++| Spend uploads, validators, readiness checks, Python job bridge and analyst work queue | 3–5 | Product-specific design estimate; [production review expectations](https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review) |
++| Job status, in-admin findings, secured PDF, optional notification | 2–3 | Product-specific design estimate; [admin integration expectations](https://shopify.dev/docs/apps/launch/shopify-app-store/app-store-requirements) |
++| Privacy webhooks, deletion/retention, encrypted storage, deployment, monitoring, compliant egress | 3–5 | [Privacy](https://shopify.dev/docs/apps/build/compliance/privacy-law-compliance); [protected data](https://shopify.dev/docs/apps/launch/protected-customer-data); [IP allowlist](https://shopify.dev/changelog/posts/ip-allowlists-are-now-required-for-public-apps) |
++| End-to-end verification, development-store scenarios, listing materials and initial remediation | 3–5 | [Submission preparation](https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review) |
++| **Total** | **19–31 engineering days** | Arithmetic sum of the estimates above, approximately **4–7 working weeks** for one engineer; separate from approval wait and human report fulfillment. |
++
++A CSV-first embedded variant might reduce the estimate to approximately **15–25 engineering days** by removing most automated order ingestion, **but acceptance is especially uncertain** if Shopify API usage is superficial. This is a lower-priority experiment, not a recommended way to evade meaningful integration. Replacing order ingestion with uploads still requires auth, billing, storage, tenant isolation, privacy, status and report delivery. The [platform API requirement](https://shopify.dev/docs/apps/launch/shopify-app-store/app-store-requirements) is the reason that reducing code can increase review risk.
++
++Largest unknowns, in order of decision impact:
++
++1. Whether the asynchronous human-reviewed workflow is accepted as a useful app; no public pre-approval of our exact model exists.
++2. Historical-order and protected-data access; incorrect revenue mapping or truncated history can invalidate the report even when installation succeeds.
++3. Whether pilot data supports an actionable result at all. More polished intake cannot repair the GIVEN estimator limitations.
++4. Review queue/remediation duration and newly changing platform controls. The estimate contains basic remediation, not an unlimited rejection/rebuild cycle.
++5. Whether users will finish the remaining ad-export steps and pay for a delayed, potentially inconclusive diagnostic.
++
++Hosting, storage, email and ongoing support costs are **not priced**: no public deployment architecture or measured workload establishes them yet. Do not manufacture a monthly infrastructure budget. Even a one-off product retains maintenance obligations after its last report sale; Shopify performs [ongoing quality checks](https://shopify.dev/docs/apps/launch/app-store-review/app-quality-checks).
++
++## 6. Discovery reality check
++
++**A listing is distribution infrastructure, not an assured audience.** Shopify documents discovery through Store browsing/search, admin recommendations, and Sidekick, all drawing on public listing information. Its marketing guidance explicitly recommends external traffic, listing optimization, reviews, and optional Store ads. It says outside traffic can help ranking. Sources, as of research date: [About the App Store](https://shopify.dev/docs/apps/launch/app-store-review), [Shopify marketing guidance](https://shopify.dev/docs/apps/launch/marketing).
++
++Published levers and their limits:
++
++| Lever | Verified statement | Implication for a new listing |
++|---|---|---|
++| Relevance and listing content | Shopify recommends relevant natural-language keywords, complete fields, and measuring listing changes; keyword stuffing can reduce discoverability. [Marketing guidance](https://shopify.dev/docs/apps/launch/marketing) | Use language about ad-spend audits, reporting, and ROAS; search demand for our exact one-off proposition is **UNVERIFIED**. No claim about ranking weights or current keyword difficulty. |
++| Reviews | Shopify says useful positive reviews help search/category position. Ratings weight recency, usefulness and trustworthiness, rather than being a simple mean. [Review guidance](https://shopify.dev/docs/apps/launch/marketing/manage-app-reviews) | Starting without reviews loses a trust signal, but no published universal review-count threshold for organic ranking was found. Review count is not proof of adoption. |
++| Built for Shopify | Requires **50 net installs from active shops on paid plans**, at least **5 reviews**, and a minimum recent-rating threshold, alongside technical requirements. The retrieved page does not specify a numeric rating cutoff. [BFS requirements](https://shopify.dev/docs/apps/launch/built-for-shopify/requirements) | These are badge prerequisites, not requirements to launch a first app or guarantees of search placement. A finite-use report app may struggle to retain active installations and usage. |
++| BFS exposure | Shopify documents ranking boosts and eligibility for promotional/admin surfaces, with personalized placement not guaranteed. [BFS program](https://shopify.dev/docs/apps/launch/built-for-shopify) | Later credibility benefit; a zero-traction launch cannot assume access to it. |
++| Categories and features | A primary tag is required; Shopify reviews categorization. [Category documentation](https://shopify.dev/docs/apps/launch/app-store-review/app-listing-categories) | Propose Analytics with marketing-attribution/custom-report features that actually exist; Ads only if justified. It is an audit/reporting utility, not a sales channel. Final placement is review-controlled. |
++| Advertising | Shopify offers ads in search, category/subcategory and homepage placements. [Store overview](https://shopify.dev/docs/apps/launch/app-store-review) | Paid exposure exists, but this research establishes no required spend, CPC, conversion rate, or payback. No campaign was purchased. |
++
++**Is it pay-to-play or review-gated?** Neither is established as a hard rule. Official documentation supports meaningful review/relevance advantages and optional paid discovery, not “you must buy ads” or “you need a particular review count to rank.” SegMetrics and DataGap visibly have no reviews, while Northbeam has few; these listings demonstrate availability, not meaningful organic acquisition. Evidence is insufficient to forecast first-month installs or CAC. The realistic planning assumption is **unproven organic demand and a need to bring initial qualified users ourselves**, not guaranteed free traffic.
++
++**Proposed first-install path — no outreach executed:** complete the GIVEN free-pilot gate through owner-approved channels first; learn whether sellers can supply the data and value the report. If an app later becomes justified, invite willing validated users to install the actual utility, measure listing views → installs → complete uploads → approved purchases → delivered usable findings → refunds, and improve the biggest observed drop-off. Ask users for honest reviews after a real experience without incentives or positivity filtering. Shopify permits reviews from installed merchants and within **45 days after uninstall**; fake/incentivized manipulation is prohibited. Source: [Review eligibility and policy](https://shopify.dev/docs/apps/launch/marketing/manage-app-reviews), as of research date.
++
++An existing direct or agency acquisition motion would therefore seed the app; the app does not eliminate that work. A one-off engagement also provides fewer recurring occasions to bring merchants back into admin. Those are business-model inferences, not measured Store conversion effects.
++
++## 7. Recommendation and channel ranking
++
++**Recommendation: re-score Shopify App Store to 2.0/5 for the current product and launch stage; classify it as a possible later credibility/data-access channel.** This is an author judgment dated 2026-11-10, not a quantified market statistic. It is not worth engineering now while the GIVEN real-seller gate remains unmet.
++
++The positive evidence is concrete: native one-time billing exists, an adjacent one-off audit listing exists, store orders can be imported, and the initial eligible revenue-share schedule is favorable. The negative evidence matters more at this stage: the manual service needs substantial software around it; historical-data access and review can delay launch; two ad uploads remain; a conditional observational analysis must compete against connected measurement suites and experimental products; and first installs still need acquisition. Relevant public evidence: [one-time billing](https://shopify.dev/docs/apps/launch/billing/manual-pricing/support-one-time-purchases), [DataGap](https://apps.shopify.com/datagap?surface_detail=store-management-operations-analytics&surface_inter_position=1&surface_intra_position=22&surface_type=category&surface_version=redesign), [scope rules](https://shopify.dev/docs/api/usage/access-scopes), [WorkMagic](https://apps.shopify.com/workmagic), [marketing guidance](https://shopify.dev/docs/apps/launch/marketing).
++
++| Rank for this launch | Channel | Score | Basis / action |
++|---|---|---:|---|
++| 1 | Upwork Project Catalog | **4.5/5** | GIVEN prior assessment, retained rather than re-researched. Service packaging aligns with the current delivery model. |
++| 2 | Direct sale | **4.0/5** | GIVEN prior assessment. Run approved validation before commercial launch; no outreach authorized by this memo. |
++| 3 | Agency white-label | **3.0/5** | GIVEN prior assessment. Bounded agency-branded diagnostic remains the proposed differentiation; incrementality itself is not unique. |
++| 4 | Shopify App Store | **2.0/5**, previously **2.5/5** | New author assessment: later option after demonstrated data readiness, useful outcomes and willingness to buy; not the initial launch route. |
++
++**Evidence that would raise the score:** real pilots consistently yield defensible findings or useful inconclusive diagnostics; sellers explicitly prefer native order import and accept manual spend files; paid direct customers want repeat audits; a production embedded workflow passes review including older-order access; and attributable listing traffic produces incremental qualified purchases at an acceptable contribution margin. These are future decision criteria, not claimed results. A stronger acquisition signal without changing the statistical limitations would improve channel fit, not license stronger causal marketing.
++
++**Evidence that would lower it:** review rejects the human-service workflow or requires full ongoing integrations; historical access is unavailable and CSV fallback loses buyers; most eligible sellers still get no actionable result; fees plus refunds/support consume the audit contribution; or a genuinely comparable one-off competitor demonstrates that our offer has no valued distinction. No such customer, rejection, or conversion outcomes have been observed in this research.
++
++**Next authorized work:** finish real-seller validation when the owner authorizes its outreach, using the existing manual delivery. Keep this memo as the app decision record. Do not register a Partner account, pay the listing fee, build the app, or treat App Store approval as a substitute for Gate 2 on the strength of this exploration alone.
++
++## Unverified items and explicit limits
++
++- **Exact approval outcome:** neither the current service nor the proposed embedded audit has been submitted; the acceptability of delayed human fulfillment, minimum substantive functionality, and CSV fallback depends on review discretion.
++- **Current review queue:** no dependable November approval SLA verified. The older staff queue estimate is dated in section 1 and is not a promise.
++- **Account-specific gates:** existing Partner organization status, associated-account revenue eligibility, existing-app adoption/submission constraints, and required identity-verification activation date were not inspected through an account.
++- **Scope/data approval:** no approval for historical orders or protected customer data was obtained; order API parity with our exact CSV revenue definition remains untested.
++- **Triple Whale:** canonical availability conflicts with search-indexed pricing/review copies. Current installability, pricing, count/rating and reason for the unavailable response remain unverified; indexed prices are labeled accordingly.
++- **Northbeam:** Store paid-dollar tiers are not disclosed. Vendor Starter's price period is ambiguous in the retrieved rendering; Professional is explicitly monthly. Custom quotes and trial terms were not obtained.
++- **Other listing ambiguities:** Lifetimely's free-tier order allowance is not relied on; SegMetrics' Business contact allowance is inconsistent; no trial is assumed where not shown. Prices/reviews can change after the dated snapshots. Installed functionality was not independently exercised.
++- **Ad connectors:** no general Shopify replacement for the required independent ad-spend exports verified. Meta docs were rate-limited, and its current permission/review specifics remain unverified. Google sources contain legacy developer-token language alongside a newer access-policy change; no token-specific setup claim is relied on.
++- **Market demand and discovery:** no verified one-off-audit search volume, ranking weights, universal review threshold, install forecast, CAC/CPC, competitor install count, conversion rate, sales or revenue data. No claim that the survey proves absence of an exact competitor. An Install button or a review count is not evidence of commercial traction.
++- **Estimates and economics:** engineering ranges and score changes are author judgments, not empirical benchmarks. Proceeds calculations use given prices and sourced headline fees; actual country fees, taxes, refund incidence, labor, hosting and acquisition economics are not verified. The app does not solve the GIVEN causal-estimation failure modes.
++- **Task-provided numbers:** product prices, promises, policies, pilot targets and prior channel scores are GIVEN inputs without public URLs, not fabricated external findings. This memo labels that distinction explicitly rather than inventing sources.
+
+exec
+/bin/zsh -lc 'wc -l -w -c dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md' in /Users/chao
+ succeeded in 0ms:
+     196    5574   46911 dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md
+
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from pathlib import Path
+from decimal import Decimal
+import re
+p=Path('/Users/chao/dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md')
+s=p.read_text()
+print('Section headings:', '\\n'.join(re.findall(r'"'^## .*'"',s,re.M)))
+print('Source links:',len(re.findall(r'\\]\\(https?://',s)))
+for x in ('99','199','399'):
+    price=Decimal(x)
+    fee=price*Decimal('.029')
+    print(x, 'processing',round(fee,2),'net low',round(price-fee,2),'net high',round(price-fee-price*Decimal('.15'),2))
+print('Trailing whitespace lines:', sum(line "'!= line.rstrip() for line in s.splitlines()))
+print('"'Unverified items section:', bool(re.search(r'"'^## Unverified items'"',s,re.M)))
+PY" in /Users/chao
+ succeeded in 0ms:
+Section headings: ## 1. Listing mechanics and gating
+## 2. Competitive landscape on the App Store
+## 3. Pricing and billing norms
+## 4. Fit analysis — the funnel problem
+## 5. Effort estimate
+## 6. Discovery reality check
+## 7. Recommendation and channel ranking
+## Unverified items and explicit limits
+Source links: 82
+99 processing 2.87 net low 96.13 net high 81.28
+199 processing 5.77 net low 193.23 net high 163.38
+399 processing 11.57 net low 387.43 net high 327.58
+Trailing whitespace lines: 0
+Unverified items section: True
+
+codex
+Saved the [full research memo](/Users/chao/dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md).
+
+1. **Listing:** needs useful embedded software; approval of manual fulfillment remains discretionary.
+2. **Competition:** [DataGap](https://apps.shopify.com/datagap) provides a one-off audit precedent; incrementality itself is not unique.
+3. **Billing:** one-time charges are supported. Eligible developers initially pay **0% revenue share plus 2.9% processing**. [Shopify fees](https://shopify.dev/docs/apps/launch/distribution/revenue-share)
+4. **Funnel:** order import can remove one upload; Meta/Google spend uploads remain.
+5. **Effort:** estimated **19–31 engineering days**, plus review time.
+6. **Discovery:** initial acquisition still needs work; no verified mandatory ad spend or universal review threshold.
+7. **Recommendation:** later credibility/data-access channel, not the launch route.
+
+**Ranking:** Upwork **4.5/5** → direct **4.0** → agency **3.0** → Shopify **2.0**, down from **2.5**.
+
+No commits, pushes, registrations, outreach, or spending.
+tokens used
+163,644
+Saved the [full research memo](/Users/chao/dev/ad-attribution-auditor/explorations/2026-11-10-shopify-app-store.md).
+
+1. **Listing:** needs useful embedded software; approval of manual fulfillment remains discretionary.
+2. **Competition:** [DataGap](https://apps.shopify.com/datagap) provides a one-off audit precedent; incrementality itself is not unique.
+3. **Billing:** one-time charges are supported. Eligible developers initially pay **0% revenue share plus 2.9% processing**. [Shopify fees](https://shopify.dev/docs/apps/launch/distribution/revenue-share)
+4. **Funnel:** order import can remove one upload; Meta/Google spend uploads remain.
+5. **Effort:** estimated **19–31 engineering days**, plus review time.
+6. **Discovery:** initial acquisition still needs work; no verified mandatory ad spend or universal review threshold.
+7. **Recommendation:** later credibility/data-access channel, not the launch route.
+
+**Ranking:** Upwork **4.5/5** → direct **4.0** → agency **3.0** → Shopify **2.0**, down from **2.5**.
+
+No commits, pushes, registrations, outreach, or spending.
