@@ -1,0 +1,495 @@
+Ad Attribution Auditor — agent-native acceptance transcripts
+Generated from agent_native/acceptance/raw/run*/turn*.jsonl (claude -p --output-format stream-json).
+run2 is the acceptance-of-record (after one starter-prompt fix); run1 is kept as evidence of the gap found.
+
+##############################################################################
+# run1 / turn1
+##############################################################################
+
+=== USER ===
+You are going to help me run an Ad Attribution Auditor audit using the "ad-attribution-auditor" MCP tools (validate_csv, run_audit, get_report). Follow the instructions below in order.
+
+## 1. What this is
+
+Ad Attribution Auditor is a one-off incrementality audit for a Shopify store that advertises on Meta and Google. From three CSV exports it estimates, for each ad campaign, how much extra store revenue each ad dollar actually caused (incremental ROAS, "iROAS"), with a 95% confidence interval, an evidence label (positive / practically zero / negative / inconclusive / unavailable), a detection limit (MDE80), data-quality and method warnings, and a scale / hold / kill priority compared with your break-even point. It compares that against what the ad platforms claim. The statistics are run by the tools, not by you.
+
+## 2. What to prepare (three CSV files)
+
+All three files must cover the same date window (90 consecutive days recommended; at least 60 complete days are required for campaign estimates), be saved as UTF-8 CSV with exactly one header row, contain no totals or summary rows, and include every day of the window. Header names are exact (case, spaces and punctuation matter). Numbers must be plain decimals such as `1200.50`: no `$`, no thousands separators like `1,200`, no `N/A`, `--` or `nan`, and no blank cells in required number columns. Dates as `YYYY-MM-DD` are safest.
+
+**File 1: Meta Ads, daily by campaign** (Ads Manager report, breakdown by Day, one row per campaign per day)
+- Required headers: `Day`, `Campaign name`, `Amount spent (USD)`, `Purchases`
+- Optional headers: `Purchase conversion value`, `Purchase ROAS`
+- Spend must be in USD (the header says so). Include days where a campaign spent 0; a missing campaign-day row is treated as zero spend.
+
+**File 2: Google Ads, daily by campaign** (Campaigns report segmented by Day)
+- Required headers: `Day`, `Campaign`, `Cost`, `Conversions`
+- Optional headers: `Conv. value`, `Cost / conv.`
+- Remove the extra title/total lines Google adds above or below the table.
+
+**File 3: Shopify, one of these two forms**
+- (a) Order export, one row per order or line item. Required headers: `Name`, `Email`, `Created at`, `Total`. Optional: `Referring Site`, `Landing Site`. Before sharing, strip customer personal details: delete name/address/phone columns, and keep the `Email` column but make every value blank. Extra line-item rows of the same order may have a blank `Total`.
+- (b) Daily totals, one row per store-local day. Headers must be exactly `date`, `orders`, `revenue`, `currency` and nothing else. `date` is `YYYY-MM-DD`, `orders` is a whole number (0 is allowed on a real zero-order day, and then revenue must be 0), `revenue` is gross order total for that day (refunds not subtracted), `currency` is one 3-letter code such as `USD` for the whole file. No duplicate dates.
+
+Optional but important: your contribution margin, the share of revenue left after product cost, shipping, payment fees and other variable costs (for example 0.35 for 35%). Break-even iROAS is 1 / margin.
+
+## 3. How to connect the tools (only if the tools are not already available)
+
+The tools run locally from a copy of the Ad Attribution Auditor repository with its Python 3.12 virtualenv at `.venv`. Replace `<INSTALL_PATH>` with the absolute path of that folder (for example `/Users/you/dev/ad-attribution-auditor`).
+
+Claude Code (run in a terminal, then start a new Claude Code session):
+
+```
+claude mcp add --scope user ad-attribution-auditor -- <INSTALL_PATH>/.venv/bin/python <INSTALL_PATH>/agent_native/mcp_server.py
+```
+
+Check with `claude mcp list` (it should show `ad-attribution-auditor ... Connected`).
+
+Claude Desktop: open Settings → Developer → Edit Config (the file `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `%APPDATA%\Claude\claude_desktop_config.json` on Windows), add this, save, and fully restart Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "ad-attribution-auditor": {
+      "command": "<INSTALL_PATH>/.venv/bin/python",
+      "args": ["<INSTALL_PATH>/agent_native/mcp_server.py"]
+    }
+  }
+}
+```
+
+If the tools still do not appear, tell me so plainly; do not try to imitate them.
+
+## 4. Steps you (Claude) must follow
+
+1. **Get the three files.** Ask me for them, or for their file paths if you can see my files. If I name a folder, look only for the three CSVs. For each tool call, pass the file either as `path` (the absolute path, when the tools run on the same computer as the files; preferred for large files) or as `content` (the full CSV text, unchanged). Never edit, sample or truncate the data yourself.
+2. **Validate each file** with `validate_csv` (kinds: `meta_ads`, `google_ads`, `shopify_orders` or `shopify_daily`). If `ok` is false, show me the exact errors (they name the file, column, row and value) and help me fix the export. Do not guess, reformat numbers, fill in missing days or drop rows on my behalf without my explicit agreement, and re-validate after any fix. Also tell me every warning, especially missing days, a window shorter than 60 days, date windows that differ between files, or a non-blank Email column.
+3. **Ask for my contribution margin.** If I do not know it, say clearly that the audit will assume 40% (break-even iROAS 2.50x), and that the resulting scale/hold/kill calls are then revenue-iROAS priorities, not profit decisions.
+4. **Run the audit** with `run_audit`, passing all three files and the margin (omit `contribution_margin` only if I do not know it). Then call `get_report` with the returned `report_id`.
+5. **Present the report**, using only numbers the tools returned (you may quote `report_markdown` directly):
+   - Headline: total spend, platform-reported ROAS, estimated store iROAS with its 95% confidence interval, and the margin / break-even used and whether it was assumed.
+   - A per-campaign table: platform, campaign, spend, platform ROAS, estimated iROAS, 95% CI, label, MDE80, action.
+   - What is inconclusive and why: a wide interval that includes zero means the data cannot tell; MDE80 shows roughly how large an effect would have to be to be detected reliably with this much data.
+   - Warnings in plain words: every data-quality, model and input warning, and the standing method limits.
+   - What the actions mean: SCALE only when the whole interval is above break-even, KILL only when the whole interval is below it, HOLD otherwise, and no action when the estimate is unavailable. If the report says a validation hold is in effect, say that these are provisional priorities. Recommend confirming any large budget change with a controlled holdout test (for example pausing a campaign in some regions or weeks) before acting.
+
+## 5. Honest limits (say these plainly)
+
+- "Inconclusive" is a legitimate and common answer, not a failure of the audit. Do not round it into a yes or no.
+- The estimates assume that day-to-day spend changes were not simply following demand (for example raising budgets on days you already expected high sales, or automated bidding chasing sales) and that ads affect sales on the same day (no lagged or carry-over effect). If what I tell you about how budgets were set, promotions, or long purchase cycles suggests these assumptions are wrong, say so and treat the affected numbers with extra caution.
+- These are observational estimates from a regression, not a controlled experiment, and they measure revenue, not profit.
+- Never invent, recompute, extrapolate or "fill in" numbers the tools did not return. If something is unavailable, say it is unavailable and quote the reason the tools gave.
+
+Start now by asking me for the three files (or confirming the paths I gave you) and my contribution margin.
+
+---
+
+My three files are:
+- Meta Ads: /Users/chao/dev/ad-attribution-auditor/data/sample_meta_ads.csv
+- Google Ads: /Users/chao/dev/ad-attribution-auditor/data/sample_google_ads.csv
+- Shopify orders: /Users/chao/dev/ad-attribution-auditor/data/sample_shopify_orders.csv
+
+[session init: cwd=/private/tmp/aaa-stranger-Eajf model=claude-opus-5-5 tools=['mcp__ad-attribution-auditor__get_report', 'mcp__ad-attribution-auditor__run_audit', 'mcp__ad-attribution-auditor__validate_csv'] mcp_servers=[{'name': 'ad-attribution-auditor', 'status': 'connected', 'source': 'dynamic'}]]
+=== ASSISTANT ===
+I'll start by checking all three files.
+
+=== TOOL CALL: mcp__ad-attribution-auditor__validate_csv ===
+{
+ "kind": "meta_ads",
+ "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_meta_ads.csv"
+}
+
+=== TOOL RESULT ===
+{"ok":true,"kind":"meta_ads","file":"sample_meta_ads.csv","errors":[],"warnings":["Campaign-days with no row are treated by the engine as zero spend for that campaign; export every day of the window, including days a campaign was paused."],"required_headers":["Amount spent (USD)","Campaign name","Day","Purchases"],"optional_headers":["Purchase ROAS","Purchase conversion value"],"summary":{"rows":60,"date_range":{"start":"2024-01-01","end":"2024-02-29","calendar_days":60,"days_with_rows":60},"campaigns_found":[{"campaign_name":"Lookalike - US","rows":16,"total_spend":2516.41,"first_day":"2024-01-01","last_day":"2024-02-29"},{"campaign_name":"Prospecting - US","rows":18,"total_spend":2193.37,"first_day":"2024-01-09","last_day":"2024-02-28"},{"campaign_name":"Retargeting - US","rows":26,"total_spend":3126.18,"first_day":"2024-01-03","last_day":"2024-02-25"}],"total_spend":7835.96}}
+
+=== TOOL CALL: mcp__ad-attribution-auditor__validate_csv ===
+{
+ "kind": "google_ads",
+ "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_google_ads.csv"
+}
+
+=== TOOL RESULT ===
+{"ok":true,"kind":"google_ads","file":"sample_google_ads.csv","errors":[],"warnings":["Campaign-days with no row are treated by the engine as zero spend for that campaign; export every day of the window, including days a campaign was paused."],"required_headers":["Campaign","Conversions","Cost","Day"],"optional_headers":["Conv. value","Cost / conv."],"summary":{"rows":60,"date_range":{"start":"2024-01-01","end":"2024-02-29","calendar_days":60,"days_with_rows":60},"campaigns_found":[{"campaign_name":"Search - Brand","rows":15,"total_spend":1250.02,"first_day":"2024-01-02","last_day":"2024-02-16"},{"campaign_name":"Search - Non-Brand","rows":21,"total_spend":1720.8,"first_day":"2024-01-06","last_day":"2024-02-29"},{"campaign_name":"Shopping - US","rows":24,"total_spend":2308.65,"first_day":"2024-01-01","last_day":"2024-02-28"}],"total_spend":5279.47}}
+
+=== TOOL CALL: mcp__ad-attribution-auditor__validate_csv ===
+{
+ "kind": "shopify_orders",
+ "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_shopify_orders.csv"
+}
+
+=== TOOL RESULT ===
+{"ok":true,"kind":"shopify_orders","file":"sample_shopify_orders.csv","errors":[],"warnings":["Email column has 443 non-blank value(s). The engine only hashes it; keep the column but blank it before sharing to avoid passing customer personal data."],"required_headers":["Created at","Email","Name","Total"],"optional_headers":["Landing Site","Referring Site"],"summary":{"rows":443,"date_range":{"start":"2024-01-01","end":"2024-02-29","calendar_days":60,"days_with_rows":60},"orders":443,"revenue_total":44085.72}}
+
+=== ASSISTANT ===
+All three files pass validation (`ok: true`, no errors). There are warnings to review before I run the audit.
+
+**What was found**
+
+| File | Rows | Window | Campaigns / totals |
+|---|---|---|---|
+| Meta Ads | 60 | 2024-01-01 → 2024-02-29 (60 days) | Lookalike - US ($2,516.41, 16 rows), Prospecting - US ($2,193.37, 18 rows), Retargeting - US ($3,126.18, 26 rows). Total $7,835.96 |
+| Google Ads | 60 | 2024-01-01 → 2024-02-29 (60 days) | Search - Brand ($1,250.02, 15 rows), Search - Non-Brand ($1,720.80, 21 rows), Shopping - US ($2,308.65, 24 rows). Total $5,279.47 |
+| Shopify orders | 443 | 2024-01-01 → 2024-02-29 (60 days) | 443 orders, $44,085.72 revenue |
+
+**Warnings**
+
+1. **Missing campaign-days are counted as zero spend.** Each campaign has rows on only 15 to 26 of the 60 days, and the engine will treat every missing day as $0 spend. That's correct if the campaigns really were paused or spent nothing on those days. If the exports dropped days that did have spend, the estimates will be wrong. Do those gaps match real pauses?
+2. **The window is exactly 60 days.** That's the minimum for campaign estimates, and the recommended length is 90. Expect wide confidence intervals and more "inconclusive" results.
+3. **The Shopify Email column has 443 non-blank values.** The engine only hashes these, and everything runs locally, but the guidance is to keep the column and blank every value before sharing. Do you want to blank it and re-validate before the audit, or go ahead as is? I won't edit the file myself unless you tell me to.
+4. All three files cover the same dates, and no days are missing at the store level.
+
+**I also need your contribution margin:** the share of revenue left after product cost, shipping, payment fees and other variable costs (for example 0.35). If you don't know it, the audit will assume 40%, which makes break-even iROAS 2.50x. The scale/hold/kill calls would then rank campaigns by revenue iROAS and wouldn't be profit decisions.
+
+Once you've answered the margin question and the Email question, and confirmed the zero-spend gaps are real, I'll run the audit.
+
+[turn end: subtype=success turns=4 duration_ms=14800 cost_usd=0.10344460000000001]
+
+##############################################################################
+# run1 / turn2
+##############################################################################
+
+=== USER ===
+I don't know my margin, use the 40% assumption. The zero-spend gaps are real: each campaign only ran on some days. The emails are fake demo data, so go ahead as is. Please run the audit and give me the report.
+
+[session init: cwd=/private/tmp/aaa-stranger-Eajf model=claude-opus-5-5 tools=['mcp__ad-attribution-auditor__get_report', 'mcp__ad-attribution-auditor__run_audit', 'mcp__ad-attribution-auditor__validate_csv'] mcp_servers=[{'name': 'ad-attribution-auditor', 'status': 'connected', 'source': 'dynamic'}]]
+=== TOOL CALL: mcp__ad-attribution-auditor__run_audit ===
+{
+ "meta_ads": {
+  "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_meta_ads.csv"
+ },
+ "google_ads": {
+  "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_google_ads.csv"
+ },
+ "shopify": {
+  "kind": "shopify_orders",
+  "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_shopify_orders.csv"
+ }
+}
+
+=== TOOL RESULT ===
+{"ok":true,"report_id":"20261114T064523Z-4887b8cc","status":"Audit complete: 6 campaign(s), 6 estimated, 60 days, store iROAS 1.22x. Call get_report with report_id=20261114T064523Z-4887b8cc."}
+
+=== TOOL CALL: mcp__ad-attribution-auditor__get_report ===
+{
+ "report_id": "20261114T064523Z-4887b8cc"
+}
+
+=== TOOL RESULT ===
+{"ok":true,"report":{"report_id":"20261114T064523Z-4887b8cc","created_utc":"2026-11-14T06:45:23.987237+00:00","engine":{"pipeline":"ad_audit.engine.aggregate_audit.run_aggregate_audit","method":"joint_revenue_ols_hc3","model_status":"estimated","validation_gate":"FAIL"},"inputs":{"meta_ads":{"file":"sample_meta_ads.csv","sha256":"df6aa05eda29b6d27f2961c57455acd96ac203fd084a7a066acace077139341c"},"google_ads":{"file":"sample_google_ads.csv","sha256":"0a0e9ac847758d5e1674f801e2b8e400a889046a3adb7ef9be86f4e3ac471f7d"},"shopify_orders":{"file":"sample_shopify_orders.csv","sha256":"a95bc7a8a96771bf8f526414961ede4d9a001073bbb398b7bf48e6053411a563"}},"dataset":{"start":"2024-01-01","end":"2024-02-29","days":60,"shopify_granularity":"orders"},"decision_rule":{"contribution_margin":0.4,"margin_source":"assumed","break_even_iroas":2.5,"rule":"Assumed contribution margin: 40%. Break-even iROAS = 1/margin = 2.50x. SCALE if the entire 95% CI exceeds this threshold; KILL if below; KEEP otherwise. Customer margin unknown: revenue-iROAS priorities, not profit decisions.","profit_calls":false,"label_rule":"Practical equivalence first (CI inside +/-0.2x), then sign, else inconclusive","practical_zero_delta":0.2},"store":{"reported_roas":4.76820965839473,"true_incremental_roas":1.2235251105910527,"inflation_rate":0.7433994731257337,"total_spend":13115.43,"reported_revenue":62537.12,"incremental_revenue":16047.057941199211,"confidence_interval":[-0.02441197081467328,2.4714621919967787],"confidence_level":0.95,"standard_error":0.6199710914344732,"non_incremental":true,"estimation_method":"joint_revenue_ols_hc3","effect_label":"inconclusive","mde80":1.774228720422412},"campaigns":[{"platform":"google_ads","campaign_name":"Search - Brand","campaign_id":null,"total_spend":1250.02,"reported_roas":4.719572486840211,"true_incremental_roas":-0.0028360034730696066,"incremental_revenue":-3.5450610614064697,"confidence_interval":[-2.6025303409962683,2.596858334050129],"confidence_level":0.95,"standard_error":1.2915197086817505,"non_incremental":true,"status":"estimated","effect_label":"inconclusive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":3.6960616257652394,"action":"hold","action_display":"HOLD (keep current budget)","engine_action":"KEEP","engine_action_reason":"95% interval includes the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KEEP. 95% interval includes the 2.50x margin threshold."},{"platform":"google_ads","campaign_name":"Search - Non-Brand","campaign_id":null,"total_spend":1720.8,"reported_roas":4.706183170618316,"true_incremental_roas":-0.8249259745673181,"incremental_revenue":-1419.532617035441,"confidence_interval":[-4.095548105449514,2.4456961563148782],"confidence_level":0.95,"standard_error":1.6248344586961911,"non_incremental":true,"status":"estimated","effect_label":"inconclusive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":4.649939331655888,"action":"kill","action_display":"KILL","engine_action":"KILL","engine_action_reason":"Entire 95% interval is below the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KILL. Entire 95% interval is below the 2.50x margin threshold."},{"platform":"google_ads","campaign_name":"Shopping - US","campaign_id":null,"total_spend":2308.6500000000005,"reported_roas":4.97576072596539,"true_incremental_roas":-0.8964567742903865,"incremental_revenue":-2069.6049319655012,"confidence_interval":[-3.3629092080592558,1.5699956594784825],"confidence_level":0.95,"standard_error":1.2253255633789057,"non_incremental":true,"status":"estimated","effect_label":"inconclusive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":3.506627706437834,"action":"kill","action_display":"KILL","engine_action":"KILL","engine_action_reason":"Entire 95% interval is below the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KILL. Entire 95% interval is below the 2.50x margin threshold."},{"platform":"meta","campaign_name":"Lookalike - US","campaign_id":null,"total_spend":2516.41,"reported_roas":5.094559312671624,"true_incremental_roas":2.2044768725444395,"incremental_revenue":5547.367646839552,"confidence_interval":[0.7503786075511996,3.6585751375376794],"confidence_level":0.95,"standard_error":0.722391298273907,"non_incremental":false,"status":"estimated","effect_label":"positive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":2.0673341168460997,"action":"hold","action_display":"HOLD (keep current budget)","engine_action":"KEEP","engine_action_reason":"95% interval includes the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KEEP. 95% interval includes the 2.50x margin threshold."},{"platform":"meta","campaign_name":"Prospecting - US","campaign_id":null,"total_spend":2193.37,"reported_roas":5.7520436588446096,"true_incremental_roas":3.041268373137938,"incremental_revenue":6670.626811589559,"confidence_interval":[1.3170966938423938,4.765440052433482],"confidence_level":0.95,"standard_error":0.8565628938833794,"non_incremental":false,"status":"estimated","effect_label":"positive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":2.451305404675716,"action":"hold","action_display":"HOLD (keep current budget)","engine_action":"KEEP","engine_action_reason":"95% interval includes the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KEEP. 95% interval includes the 2.50x margin threshold."},{"platform":"meta","campaign_name":"Retargeting - US","campaign_id":null,"total_spend":3126.1800000000003,"reported_roas":3.7155602044667932,"true_incremental_roas":2.342074382419582,"incremental_revenue":7321.74609283245,"confidence_interval":[1.1284478774200628,3.555700887419101],"confidence_level":0.95,"standard_error":0.6029257084426153,"non_incremental":false,"status":"estimated","effect_label":"positive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":1.7254483684470001,"action":"hold","action_display":"HOLD (keep current budget)","engine_action":"KEEP","engine_action_reason":"95% interval includes the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KEEP. 95% interval includes the 2.50x margin threshold."}],"warnings":{"data_quality":[],"data_quality_notes":[],"model":["Observational association: causal interpretation requires exogenous spend and a valid model"],"campaign":{"Search - Brand":["Observational association: causal interpretation requires exogenous spend and a valid model"],"Search - Non-Brand":["Observational association: causal interpretation requires exogenous spend and a valid model"],"Shopping - US":["Observational association: causal interpretation requires exogenous spend and a valid model"],"Lookalike - US":["Observational association: causal interpretation requires exogenous spend and a valid model"],"Prospecting - US":["Observational association: causal interpretation requires exogenous spend and a valid model"],"Retargeting - US":["Observational association: causal interpretation requires exogenous spend and a valid model"]},"input_files":[],"identification_limitations":["HC3 does not correct serial correlation or endogenous spend.","Promotions, omitted channels, nonlinear seasonality, carryover, saturation and interactions can bias estimates.","Missing campaign-date rows are treated as zero spend; missing interior Shopify days disable campaign inference.","Intervals are marginal 95% HC3 intervals, conditional on observed spend, and do not establish real-world causality.","Validation v2 calibration found bias with endogenous (demand-following) spend and with carryover/adstock (scenarios S4 and S5 FAIL in validation/v2-calibration-2026-11-09.md); validate material budget changes with a controlled holdout."]},"model_diagnostics":{"status":"estimated","method":"joint_revenue_ols_hc3","n_obs":60,"n_parameters":14,"residual_df":46,"r_squared":0.36716845121920993,"condition_number":9.418426654518314,"durbin_watson":2.2846769685758033,"confidence_level":0.95,"critical_value":2.012895598919429,"controls":["const","dow_1","dow_2","dow_3","dow_4","dow_5","dow_6","trend"],"warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"non_incremental_rule":"95% interval includes zero; screening flag, not proof of zero lift","effect_label_rule":"Practical equivalence first (CI inside +/-0.2x), then sign, else inconclusive"},"legacy_health_alerts":[{"severity":"critical","title":"High Duplication Rate","message":"Ad platforms are over-reporting conversions by 55%. More than 30% of reported conversions have no matching e-commerce order.","metric":"duplication_rate","value":0.5548,"threshold":0.3},{"severity":"critical","title":"Severe ROAS Inflation","message":"Reported ROAS (4.77x) is inflated by 74% versus true incremental ROAS (1.22x). Ad spend may not be generating real returns.","metric":"inflation_rate","value":0.7433994731257337,"threshold":0.6},{"severity":"info","title":"No Brand Search Data","message":"GSC brand search data was not provided. Cannibalization scoring is disabled. Upload GSC data for a more complete audit.","metric":"gsc_data","value":0,"threshold":0}],"mde80_definition":"Minimum detectable effect at 80% power, two-sided 95%: SE x factor(t, residual df) (scripts/run_v2_validation.mde_factor). A true iROAS that differs from a reference value by less than this is unlikely to be distinguished from it."},"report_markdown":"# Ad attribution audit — report 20261114T064523Z-4887b8cc\n\nData window: 2024-01-01 to 2024-02-29 (60 days); Shopify input: orders. Method: joint_revenue_ols_hc3 (model status: estimated).\n\n## Headline (all campaigns combined)\n\n- Total ad spend: $13,115\n- Platform-reported ROAS: 4.77x ($62,537 claimed by platforms)\n- Estimated store incremental ROAS (iROAS): 1.22x, 95% CI [-0.02, 2.47]x, label: inconclusive, MDE80 1.77x\n- Estimated incremental revenue: $16,047\n- Estimated iROAS is 74% below platform-reported ROAS\n\n## Decision threshold\n\nAssumed contribution margin: 40%. Break-even iROAS = 1/margin = 2.50x. SCALE if the entire 95% CI exceeds this threshold; KILL if below; KEEP otherwise. Customer margin unknown: revenue-iROAS priorities, not profit decisions.\n\n## Per-campaign results\n\n| Platform | Campaign | Spend | Platform ROAS | Est. iROAS | 95% CI | Label | MDE80 | Action |\n|---|---|---:|---:|---:|---|---|---:|---|\n| google_ads | Search - Brand | $1,250 | 4.72x | -0.00x | [-2.60, 2.60]x | inconclusive | 3.70x | HOLD (keep current budget) |\n| google_ads | Search - Non-Brand | $1,721 | 4.71x | -0.82x | [-4.10, 2.45]x | inconclusive | 4.65x | KILL |\n| google_ads | Shopping - US | $2,309 | 4.98x | -0.90x | [-3.36, 1.57]x | inconclusive | 3.51x | KILL |\n| meta | Lookalike - US | $2,516 | 5.09x | 2.20x | [0.75, 3.66]x | positive | 2.07x | HOLD (keep current budget) |\n| meta | Prospecting - US | $2,193 | 5.75x | 3.04x | [1.32, 4.77]x | positive | 2.45x | HOLD (keep current budget) |\n| meta | Retargeting - US | $3,126 | 3.72x | 2.34x | [1.13, 3.56]x | positive | 1.73x | HOLD (keep current budget) |\n\nAction reasons (engine rule, `scripts/gate1_pdf.action_for_interval`):\n\n- **Search - Brand** — HOLD (keep current budget): 95% interval includes the 2.50x margin threshold.\n- **Search - Non-Brand** — KILL: Entire 95% interval is below the 2.50x margin threshold.\n- **Shopping - US** — KILL: Entire 95% interval is below the 2.50x margin threshold.\n- **Lookalike - US** — HOLD (keep current budget): 95% interval includes the 2.50x margin threshold.\n- **Prospecting - US** — HOLD (keep current budget): 95% interval includes the 2.50x margin threshold.\n- **Retargeting - US** — HOLD (keep current budget): 95% interval includes the 2.50x margin threshold.\n\n**Validation hold.** The engine's validation gate is `FAIL` (validation/v2-calibration-2026-11-09.md). The engine's own report renderer therefore shows every action as \"KEEP — hold\" with the above as a *provisional priority*. Treat SCALE/KILL as priorities to test with a controlled holdout, not as instructions.\n\n## Inconclusive / unavailable\n\n- Search - Brand: 95% CI [-2.60, 2.60]x includes zero but is not inside the +/-0.2x practical-zero band (width 5.20x; MDE80 3.70x). The data cannot tell whether this campaign adds revenue; that is an answer, not a failure.\n- Search - Non-Brand: 95% CI [-4.10, 2.45]x includes zero but is not inside the +/-0.2x practical-zero band (width 6.54x; MDE80 4.65x). The data cannot tell whether this campaign adds revenue; that is an answer, not a failure.\n- Shopping - US: 95% CI [-3.36, 1.57]x includes zero but is not inside the +/-0.2x practical-zero band (width 4.93x; MDE80 3.51x). The data cannot tell whether this campaign adds revenue; that is an answer, not a failure.\n\n## Warnings\n\n- Model: Observational association: causal interpretation requires exogenous spend and a valid model\n\nStanding identification limits of this method:\n\n- HC3 does not correct serial correlation or endogenous spend.\n- Promotions, omitted channels, nonlinear seasonality, carryover, saturation and interactions can bias estimates.\n- Missing campaign-date rows are treated as zero spend; missing interior Shopify days disable campaign inference.\n- Intervals are marginal 95% HC3 intervals, conditional on observed spend, and do not establish real-world causality.\n- Validation v2 calibration found bias with endogenous (demand-following) spend and with carryover/adstock (scenarios S4 and S5 FAIL in validation/v2-calibration-2026-11-09.md); validate material budget changes with a controlled holdout.\n\n## Model diagnostics\n\nn_obs=60, parameters=14, residual df=46, R²=0.367, Durbin-Watson=2.28, condition number=9.4, controls=const, dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, trend.\n\nMDE80: Minimum detectable effect at 80% power, two-sided 95%: SE x factor(t, residual df) (scripts/run_v2_validation.mde_factor). A true iROAS that differs from a reference value by less than this is unlikely to be distinguished from it.\n\n","artifacts_dir":"/Users/chao/dev/ad-attribution-auditor/agent_native/runs/20261114T064523Z-4887b8cc"}
+
+=== ASSISTANT ===
+# Ad Attribution Audit: report `20261114T064523Z-4887b8cc`
+
+The audit ran with the 40% margin assumption. Across all ads, the data can't confirm that spend added store revenue. Your three Meta campaigns show positive returns, but none is confirmed above break-even. Two Google campaigns come out as provisional KILL priorities.
+
+**The engine's validation gate is FAIL, so every action below is a provisional priority, not an instruction.**
+
+## Headline
+
+| | |
+|---|---|
+| Data window | 2024-01-01 → 2024-02-29 (60 days, Shopify orders) |
+| Total ad spend | $13,115 |
+| Platform-reported ROAS | 4.77x ($62,537 claimed by the platforms) |
+| **Estimated store iROAS** | **1.22x, 95% CI [−0.02, 2.47]x**, label: inconclusive, MDE80 1.77x |
+| Estimated incremental revenue | $16,047 |
+| Gap | Estimated iROAS is 74% below platform-reported ROAS |
+| Margin / break-even | **Assumed** 40% → break-even 2.50x. These are revenue-iROAS priorities, not profit decisions. |
+
+The store-level interval runs from just below zero to just below break-even. The data can't confirm that total ad spend added revenue, and it can't confirm that spend paid for itself at a 40% margin either.
+
+## Per-campaign results
+
+| Platform | Campaign | Spend | Platform ROAS | Est. iROAS | 95% CI | Label | MDE80 | Action (provisional) |
+|---|---|---:|---:|---:|---|---|---:|---|
+| Google | Search - Brand | $1,250 | 4.72x | −0.00x | [−2.60, 2.60]x | inconclusive | 3.70x | HOLD |
+| Google | Search - Non-Brand | $1,721 | 4.71x | −0.82x | [−4.10, 2.45]x | inconclusive | 4.65x | KILL |
+| Google | Shopping - US | $2,309 | 4.98x | −0.90x | [−3.36, 1.57]x | inconclusive | 3.51x | KILL |
+| Meta | Lookalike - US | $2,516 | 5.09x | 2.20x | [0.75, 3.66]x | positive | 2.07x | HOLD |
+| Meta | Prospecting - US | $2,193 | 5.75x | 3.04x | [1.32, 4.77]x | positive | 2.45x | HOLD |
+| Meta | Retargeting - US | $3,126 | 3.72x | 2.34x | [1.13, 3.56]x | positive | 1.73x | HOLD |
+
+## What's inconclusive and why
+
+- **All three Google campaigns are inconclusive.** Their intervals include zero and are very wide (4.9x to 6.5x across), so the data can't tell whether they add any revenue at all. Their MDE80 values (3.5x to 4.65x) mean that with this much data, only a very large effect would reliably show up. That's a legitimate answer, not a failure of the audit.
+- **"Inconclusive" and "KILL" can both apply.** The label asks whether the campaign is different from zero. The action asks whether it clears the 2.50x break-even. For Search - Non-Brand and Shopping - US, the data can't tell whether they help at all. But the top of each interval (2.45x and 1.57x) is still below 2.50x, so even the best case consistent with the data doesn't pay back at a 40% margin. Non-Brand clears that line by only 0.05x, so that KILL is fragile.
+- **The Meta campaigns are labeled positive.** Each interval sits entirely above zero, so they appear to add revenue. Every interval also contains 2.50x, so the data can't say whether they're profitable. That's why they're HOLD rather than SCALE.
+
+## Warnings
+
+- **Model:** This is an observational association. Reading it as cause and effect requires that spend wasn't following demand and that the model is valid.
+- **Validation hold (gate FAIL):** In the engine's own calibration tests (S4 and S5), estimates were biased when spend followed demand and when ad effects carried over to later days.
+- **Standing method limits:**
+  - The intervals don't correct for errors that are correlated from day to day, or for spend that follows demand.
+  - Promotions, channels not included, non-linear seasonality, carry-over, saturation and interactions between campaigns can all bias the results.
+  - Missing campaign-days are counted as zero spend. You confirmed those gaps are real pauses.
+  - The intervals are conditional on the spend you actually ran and don't prove real-world causality.
+- **Platform health alerts from the engine:**
+  - **Critical, duplicate conversions:** 55% of the conversions the platforms reported have no matching Shopify order (threshold 30%).
+  - **Critical, ROAS inflation:** Reported ROAS of 4.77x is 74% above the estimated 1.22x.
+  - **Info:** No Google Search Console data was provided, so the check for brand search taking credit for sales that would have happened anyway was skipped.
+- **Data inputs:** No data-quality or input-file warnings. The Email column wasn't blanked; you confirmed the emails are fake demo data.
+- **Model fit:** 60 observations, 46 residual degrees of freedom, R² 0.367, Durbin-Watson 2.28, condition number 9.4. The model controls for day of week and a linear trend.
+
+## What the actions mean
+
+- **SCALE:** the whole 95% interval is above 2.50x. No campaign qualified.
+- **KILL:** the whole interval is below 2.50x. This applies to Search - Non-Brand and Shopping - US.
+- **HOLD:** the interval includes 2.50x, so keep the current budget. This applies to the other four.
+- **None:** used only when an estimate is unavailable. All six were estimated.
+
+Because the validation gate is FAIL, the engine's own report renderer shows every action as "KEEP — hold". Treat the KILLs as the first candidates to test, not as decisions.
+
+## Honest limits
+
+- These are observational regression estimates of **revenue**, not profit. The margin is assumed, not yours.
+- The estimates assume budget changes weren't following expected demand. That includes automated bidding chasing sales, which is very common on Google Search and Shopping. They also assume ads affect sales on the same day only. If either assumption fails, the numbers can be biased, and the engine's calibration specifically failed in those two cases.
+- With only 60 days of data (the minimum), the intervals are wide. A 90-day export would tighten them.
+
+**Before you change any budget significantly**, confirm it with a controlled holdout test. For example, pause Shopping - US or Search - Non-Brand in some regions or on alternating weeks and compare Shopify revenue against regions or weeks where it keeps running. Supplying your real contribution margin would also turn these into profit calls.
+
+[turn end: subtype=success turns=3 duration_ms=31466 cost_usd=0.22753400000000001]
+
+[run1 tool calls: ['mcp__ad-attribution-auditor__validate_csv', 'mcp__ad-attribution-auditor__validate_csv', 'mcp__ad-attribution-auditor__validate_csv', 'mcp__ad-attribution-auditor__run_audit', 'mcp__ad-attribution-auditor__get_report']]
+
+##############################################################################
+# run2 / turn1
+##############################################################################
+
+=== USER ===
+You are going to help me run an Ad Attribution Auditor audit using the "ad-attribution-auditor" MCP tools (validate_csv, run_audit, get_report). Follow the instructions below in order.
+
+## 1. What this is
+
+Ad Attribution Auditor is a one-off incrementality audit for a Shopify store that advertises on Meta and Google. From three CSV exports it estimates, for each ad campaign, how much extra store revenue each ad dollar actually caused (incremental ROAS, "iROAS"), with a 95% confidence interval, an evidence label (positive / practically zero / negative / inconclusive / unavailable), a detection limit (MDE80), data-quality and method warnings, and a scale / hold / kill priority compared with your break-even point. It compares that against what the ad platforms claim. The statistics are run by the tools, not by you.
+
+## 2. What to prepare (three CSV files)
+
+All three files must cover the same date window (90 consecutive days recommended; at least 60 complete days are required for campaign estimates), be saved as UTF-8 CSV with exactly one header row, contain no totals or summary rows, and include every day of the window. Header names are exact (case, spaces and punctuation matter). Numbers must be plain decimals such as `1200.50`: no `$`, no thousands separators like `1,200`, no `N/A`, `--` or `nan`, and no blank cells in required number columns. Dates as `YYYY-MM-DD` are safest.
+
+**File 1: Meta Ads, daily by campaign** (Ads Manager report, breakdown by Day, one row per campaign per day)
+- Required headers: `Day`, `Campaign name`, `Amount spent (USD)`, `Purchases`
+- Optional headers: `Purchase conversion value`, `Purchase ROAS`
+- Spend must be in USD (the header says so). Include days where a campaign spent 0; a missing campaign-day row is treated as zero spend.
+
+**File 2: Google Ads, daily by campaign** (Campaigns report segmented by Day)
+- Required headers: `Day`, `Campaign`, `Cost`, `Conversions`
+- Optional headers: `Conv. value`, `Cost / conv.`
+- Remove the extra title/total lines Google adds above or below the table.
+
+**File 3: Shopify, one of these two forms**
+- (a) Order export, one row per order or line item. Required headers: `Name`, `Email`, `Created at`, `Total`. Optional: `Referring Site`, `Landing Site`. Before sharing, strip customer personal details: delete name/address/phone columns, and keep the `Email` column but make every value blank. Extra line-item rows of the same order may have a blank `Total`.
+- (b) Daily totals, one row per store-local day. Headers must be exactly `date`, `orders`, `revenue`, `currency` and nothing else. `date` is `YYYY-MM-DD`, `orders` is a whole number (0 is allowed on a real zero-order day, and then revenue must be 0), `revenue` is gross order total for that day (refunds not subtracted), `currency` is one 3-letter code such as `USD` for the whole file. No duplicate dates.
+
+Optional but important: your contribution margin, the share of revenue left after product cost, shipping, payment fees and other variable costs (for example 0.35 for 35%). Break-even iROAS is 1 / margin.
+
+## 3. How to connect the tools (only if the tools are not already available)
+
+The tools run locally from a copy of the Ad Attribution Auditor repository with its Python 3.12 virtualenv at `.venv`. Replace `<INSTALL_PATH>` with the absolute path of that folder (for example `/Users/you/dev/ad-attribution-auditor`).
+
+Claude Code (run in a terminal, then start a new Claude Code session):
+
+```
+claude mcp add --scope user ad-attribution-auditor -- <INSTALL_PATH>/.venv/bin/python <INSTALL_PATH>/agent_native/mcp_server.py
+```
+
+Check with `claude mcp list` (it should show `ad-attribution-auditor ... Connected`).
+
+Claude Desktop: open Settings → Developer → Edit Config (the file `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `%APPDATA%\Claude\claude_desktop_config.json` on Windows), add this, save, and fully restart Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "ad-attribution-auditor": {
+      "command": "<INSTALL_PATH>/.venv/bin/python",
+      "args": ["<INSTALL_PATH>/agent_native/mcp_server.py"]
+    }
+  }
+}
+```
+
+If the tools still do not appear, tell me so plainly; do not try to imitate them.
+
+## 4. Steps you (Claude) must follow
+
+1. **Get the three files.** Ask me for them, or for their file paths if you can see my files. If I name a folder, look only for the three CSVs. For each tool call, pass the file either as `path` (the absolute path, when the tools run on the same computer as the files; preferred for large files) or as `content` (the full CSV text, unchanged). Never edit, sample or truncate the data yourself.
+2. **Validate each file** with `validate_csv` (kinds: `meta_ads`, `google_ads`, `shopify_orders` or `shopify_daily`). If `ok` is false, show me the exact errors (they name the file, column, row and value) and help me fix the export. Do not guess, reformat numbers, fill in missing days or drop rows on my behalf without my explicit agreement, and re-validate after any fix. Also tell me every warning, especially missing days, a window shorter than 60 days, date windows that differ between files, or a non-blank Email column.
+3. **Ask for my contribution margin.** If I do not know it, say clearly that the audit will assume 40% (break-even iROAS 2.50x), and that the resulting scale/hold/kill calls are then revenue-iROAS priorities, not profit decisions.
+4. **Run the audit** with `run_audit`, passing all three files and the margin (omit `contribution_margin` only if I do not know it). Then call `get_report` with the returned `report_id`.
+5. **Present the report**, using only numbers the tools returned (you may quote `report_markdown` directly):
+   - Headline: total spend, platform-reported ROAS, estimated store iROAS with its 95% confidence interval, and the margin / break-even used and whether it was assumed.
+   - A per-campaign table: platform, campaign, spend, platform ROAS, estimated iROAS, 95% CI, label, MDE80, action.
+   - What is inconclusive and why: a wide interval that includes zero means the data cannot tell; MDE80 shows roughly how large an effect would have to be to be detected reliably with this much data.
+   - Warnings in plain words: every data-quality, model and input warning, and the standing method limits.
+   - What the actions mean: SCALE only when the whole interval is above break-even, KILL only when the whole interval is below it, HOLD otherwise, and no action when the estimate is unavailable. If the report says a validation hold is in effect, say that these are provisional priorities. Recommend confirming any large budget change with a controlled holdout test (for example pausing a campaign in some regions or weeks) before acting.
+
+## 5. Honest limits (say these plainly)
+
+- "Inconclusive" is a legitimate and common answer, not a failure of the audit. Do not round it into a yes or no.
+- The estimates assume that day-to-day spend changes were not simply following demand (for example raising budgets on days you already expected high sales, or automated bidding chasing sales) and that ads affect sales on the same day (no lagged or carry-over effect). If what I tell you about how budgets were set, promotions, or long purchase cycles suggests these assumptions are wrong, say so and treat the affected numbers with extra caution.
+- These are observational estimates from a regression, not a controlled experiment, and they measure revenue, not profit.
+- Never invent, recompute, extrapolate or "fill in" numbers the tools did not return, and do not re-express the tools' ratios or percentages in your own arithmetic (for example, "inflated by 74%" must not become "74% above"); quote them as given. If something is unavailable, say it is unavailable and quote the reason the tools gave.
+
+Start now by asking me for the three files (or confirming the paths I gave you) and my contribution margin.
+
+---
+
+My three files are:
+- Meta Ads: /Users/chao/dev/ad-attribution-auditor/data/sample_meta_ads.csv
+- Google Ads: /Users/chao/dev/ad-attribution-auditor/data/sample_google_ads.csv
+- Shopify orders: /Users/chao/dev/ad-attribution-auditor/data/sample_shopify_orders.csv
+
+[session init: cwd=/private/tmp/aaa-stranger2-cW5f model=claude-opus-5-5 tools=['mcp__ad-attribution-auditor__get_report', 'mcp__ad-attribution-auditor__run_audit', 'mcp__ad-attribution-auditor__validate_csv'] mcp_servers=[{'name': 'ad-attribution-auditor', 'status': 'connected', 'source': 'dynamic'}]]
+=== ASSISTANT ===
+I'll check all three files first.
+
+=== TOOL CALL: mcp__ad-attribution-auditor__validate_csv ===
+{
+ "kind": "meta_ads",
+ "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_meta_ads.csv"
+}
+
+=== TOOL RESULT ===
+{"ok":true,"kind":"meta_ads","file":"sample_meta_ads.csv","errors":[],"warnings":["Campaign-days with no row are treated by the engine as zero spend for that campaign; export every day of the window, including days a campaign was paused."],"required_headers":["Amount spent (USD)","Campaign name","Day","Purchases"],"optional_headers":["Purchase ROAS","Purchase conversion value"],"summary":{"rows":60,"date_range":{"start":"2024-01-01","end":"2024-02-29","calendar_days":60,"days_with_rows":60},"campaigns_found":[{"campaign_name":"Lookalike - US","rows":16,"total_spend":2516.41,"first_day":"2024-01-01","last_day":"2024-02-29"},{"campaign_name":"Prospecting - US","rows":18,"total_spend":2193.37,"first_day":"2024-01-09","last_day":"2024-02-28"},{"campaign_name":"Retargeting - US","rows":26,"total_spend":3126.18,"first_day":"2024-01-03","last_day":"2024-02-25"}],"total_spend":7835.96}}
+
+=== TOOL CALL: mcp__ad-attribution-auditor__validate_csv ===
+{
+ "kind": "google_ads",
+ "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_google_ads.csv"
+}
+
+=== TOOL RESULT ===
+{"ok":true,"kind":"google_ads","file":"sample_google_ads.csv","errors":[],"warnings":["Campaign-days with no row are treated by the engine as zero spend for that campaign; export every day of the window, including days a campaign was paused."],"required_headers":["Campaign","Conversions","Cost","Day"],"optional_headers":["Conv. value","Cost / conv."],"summary":{"rows":60,"date_range":{"start":"2024-01-01","end":"2024-02-29","calendar_days":60,"days_with_rows":60},"campaigns_found":[{"campaign_name":"Search - Brand","rows":15,"total_spend":1250.02,"first_day":"2024-01-02","last_day":"2024-02-16"},{"campaign_name":"Search - Non-Brand","rows":21,"total_spend":1720.8,"first_day":"2024-01-06","last_day":"2024-02-29"},{"campaign_name":"Shopping - US","rows":24,"total_spend":2308.65,"first_day":"2024-01-01","last_day":"2024-02-28"}],"total_spend":5279.47}}
+
+=== TOOL CALL: mcp__ad-attribution-auditor__validate_csv ===
+{
+ "kind": "shopify_orders",
+ "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_shopify_orders.csv"
+}
+
+=== TOOL RESULT ===
+{"ok":true,"kind":"shopify_orders","file":"sample_shopify_orders.csv","errors":[],"warnings":["Email column has 443 non-blank value(s). The engine only hashes it; keep the column but blank it before sharing to avoid passing customer personal data."],"required_headers":["Created at","Email","Name","Total"],"optional_headers":["Landing Site","Referring Site"],"summary":{"rows":443,"date_range":{"start":"2024-01-01","end":"2024-02-29","calendar_days":60,"days_with_rows":60},"orders":443,"revenue_total":44085.72}}
+
+=== ASSISTANT ===
+All three files passed validation (`ok: true`, no errors). Before I run the audit, there are some warnings I need you to look at, plus one question.
+
+**What the validator found**
+
+| File | Rows | Window | Campaigns (rows · spend) | Total spend |
+|---|---|---|---|---|
+| Meta Ads | 60 | 2024-01-01 → 2024-02-29 (60 days) | Lookalike - US (16 · 2516.41), Prospecting - US (18 · 2193.37), Retargeting - US (26 · 3126.18) | 7835.96 |
+| Google Ads | 60 | 2024-01-01 → 2024-02-29 (60 days) | Search - Brand (15 · 1250.02), Search - Non-Brand (21 · 1720.80), Shopping - US (24 · 2308.65) | 5279.47 |
+| Shopify orders | 443 orders | 2024-01-01 → 2024-02-29 (60 days) | — | revenue 44085.72 |
+
+All three files cover the same dates, and every day has at least one row.
+
+**Warnings**
+
+1. **Many campaign-days are missing (Meta and Google).** Each file has 60 rows for 3 campaigns over 60 days, which works out to one campaign row per day. A full export would have up to 180 rows per file. The engine treats every missing campaign-day as **zero spend**.
+   - If the campaigns really ran on alternating days, that's fine.
+   - If they ran at the same time and the export left out rows (for example, rows with low or zero spend got filtered out), the spend data is wrong. That would make the per-campaign estimates unreliable.
+2. **The window is exactly 60 days.** That's the minimum for campaign estimates, and the recommended length is 90. Expect wide confidence intervals and probably several inconclusive results.
+3. **The Shopify Email column has 443 non-blank values.** The engine only hashes these, and the tools run locally, so nothing is sent anywhere. Still, the instructions say to blank this column before sharing. I won't edit your file. If you want, blank it yourself and I'll check it again.
+
+**Before I run the audit, please tell me:**
+
+1. **Is the one-campaign-per-day pattern real?** If not, please re-export with every campaign on every day, including zero-spend days.
+2. **Do you want to blank the Email column first, or go ahead as it is?**
+3. **What is your contribution margin?** That's the share of revenue left after product cost, shipping, payment fees and other variable costs, for example 0.35. If you don't know it, the audit will assume **40% (break-even iROAS 2.50x)**. The scale/hold/kill calls would then rank campaigns by revenue return, not tell you what's profitable.
+4. **How were budgets set during this period?** For example, did you raise spend on days you already expected high sales, use automated bidding, or run promotions? Is your purchase cycle long, so ads keep driving sales days later? The method assumes spend didn't follow demand and that ads affect sales on the same day. Your answers tell me how cautious to be with the results.
+
+[turn end: subtype=success turns=4 duration_ms=17570 cost_usd=0.088866]
+
+##############################################################################
+# run2 / turn2
+##############################################################################
+
+=== USER ===
+I don't know my margin, use the 40% assumption. The zero-spend gaps are real: each campaign only ran on some days. The emails are fake demo data, so go ahead as is. Please run the audit and give me the report.
+
+[session init: cwd=/private/tmp/aaa-stranger2-cW5f model=claude-opus-5-5 tools=['mcp__ad-attribution-auditor__get_report', 'mcp__ad-attribution-auditor__run_audit', 'mcp__ad-attribution-auditor__validate_csv'] mcp_servers=[{'name': 'ad-attribution-auditor', 'status': 'connected', 'source': 'dynamic'}]]
+=== TOOL CALL: mcp__ad-attribution-auditor__run_audit ===
+{
+ "meta_ads": {
+  "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_meta_ads.csv"
+ },
+ "google_ads": {
+  "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_google_ads.csv"
+ },
+ "shopify": {
+  "kind": "shopify_orders",
+  "path": "/Users/chao/dev/ad-attribution-auditor/data/sample_shopify_orders.csv"
+ }
+}
+
+=== TOOL RESULT ===
+{"ok":true,"report_id":"20261114T064657Z-4887b8cc","status":"Audit complete: 6 campaign(s), 6 estimated, 60 days, store iROAS 1.22x. Call get_report with report_id=20261114T064657Z-4887b8cc."}
+
+=== TOOL CALL: mcp__ad-attribution-auditor__get_report ===
+{
+ "report_id": "20261114T064657Z-4887b8cc"
+}
+
+=== TOOL RESULT ===
+{"ok":true,"report":{"report_id":"20261114T064657Z-4887b8cc","created_utc":"2026-11-14T06:46:57.461969+00:00","engine":{"pipeline":"ad_audit.engine.aggregate_audit.run_aggregate_audit","method":"joint_revenue_ols_hc3","model_status":"estimated","validation_gate":"FAIL"},"inputs":{"meta_ads":{"file":"sample_meta_ads.csv","sha256":"df6aa05eda29b6d27f2961c57455acd96ac203fd084a7a066acace077139341c"},"google_ads":{"file":"sample_google_ads.csv","sha256":"0a0e9ac847758d5e1674f801e2b8e400a889046a3adb7ef9be86f4e3ac471f7d"},"shopify_orders":{"file":"sample_shopify_orders.csv","sha256":"a95bc7a8a96771bf8f526414961ede4d9a001073bbb398b7bf48e6053411a563"}},"dataset":{"start":"2024-01-01","end":"2024-02-29","days":60,"shopify_granularity":"orders"},"decision_rule":{"contribution_margin":0.4,"margin_source":"assumed","break_even_iroas":2.5,"rule":"Assumed contribution margin: 40%. Break-even iROAS = 1/margin = 2.50x. SCALE if the entire 95% CI exceeds this threshold; KILL if below; KEEP otherwise. Customer margin unknown: revenue-iROAS priorities, not profit decisions.","profit_calls":false,"label_rule":"Practical equivalence first (CI inside +/-0.2x), then sign, else inconclusive","practical_zero_delta":0.2},"store":{"reported_roas":4.76820965839473,"true_incremental_roas":1.2235251105910527,"inflation_rate":0.7433994731257337,"total_spend":13115.43,"reported_revenue":62537.12,"incremental_revenue":16047.057941199211,"confidence_interval":[-0.02441197081467328,2.4714621919967787],"confidence_level":0.95,"standard_error":0.6199710914344732,"non_incremental":true,"estimation_method":"joint_revenue_ols_hc3","effect_label":"inconclusive","mde80":1.774228720422412},"campaigns":[{"platform":"google_ads","campaign_name":"Search - Brand","campaign_id":null,"total_spend":1250.02,"reported_roas":4.719572486840211,"true_incremental_roas":-0.0028360034730696066,"incremental_revenue":-3.5450610614064697,"confidence_interval":[-2.6025303409962683,2.596858334050129],"confidence_level":0.95,"standard_error":1.2915197086817505,"non_incremental":true,"status":"estimated","effect_label":"inconclusive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":3.6960616257652394,"action":"hold","action_display":"HOLD (keep current budget)","engine_action":"KEEP","engine_action_reason":"95% interval includes the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KEEP. 95% interval includes the 2.50x margin threshold."},{"platform":"google_ads","campaign_name":"Search - Non-Brand","campaign_id":null,"total_spend":1720.8,"reported_roas":4.706183170618316,"true_incremental_roas":-0.8249259745673181,"incremental_revenue":-1419.532617035441,"confidence_interval":[-4.095548105449514,2.4456961563148782],"confidence_level":0.95,"standard_error":1.6248344586961911,"non_incremental":true,"status":"estimated","effect_label":"inconclusive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":4.649939331655888,"action":"kill","action_display":"KILL","engine_action":"KILL","engine_action_reason":"Entire 95% interval is below the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KILL. Entire 95% interval is below the 2.50x margin threshold."},{"platform":"google_ads","campaign_name":"Shopping - US","campaign_id":null,"total_spend":2308.6500000000005,"reported_roas":4.97576072596539,"true_incremental_roas":-0.8964567742903865,"incremental_revenue":-2069.6049319655012,"confidence_interval":[-3.3629092080592558,1.5699956594784825],"confidence_level":0.95,"standard_error":1.2253255633789057,"non_incremental":true,"status":"estimated","effect_label":"inconclusive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":3.506627706437834,"action":"kill","action_display":"KILL","engine_action":"KILL","engine_action_reason":"Entire 95% interval is below the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KILL. Entire 95% interval is below the 2.50x margin threshold."},{"platform":"meta","campaign_name":"Lookalike - US","campaign_id":null,"total_spend":2516.41,"reported_roas":5.094559312671624,"true_incremental_roas":2.2044768725444395,"incremental_revenue":5547.367646839552,"confidence_interval":[0.7503786075511996,3.6585751375376794],"confidence_level":0.95,"standard_error":0.722391298273907,"non_incremental":false,"status":"estimated","effect_label":"positive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":2.0673341168460997,"action":"hold","action_display":"HOLD (keep current budget)","engine_action":"KEEP","engine_action_reason":"95% interval includes the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KEEP. 95% interval includes the 2.50x margin threshold."},{"platform":"meta","campaign_name":"Prospecting - US","campaign_id":null,"total_spend":2193.37,"reported_roas":5.7520436588446096,"true_incremental_roas":3.041268373137938,"incremental_revenue":6670.626811589559,"confidence_interval":[1.3170966938423938,4.765440052433482],"confidence_level":0.95,"standard_error":0.8565628938833794,"non_incremental":false,"status":"estimated","effect_label":"positive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":2.451305404675716,"action":"hold","action_display":"HOLD (keep current budget)","engine_action":"KEEP","engine_action_reason":"95% interval includes the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KEEP. 95% interval includes the 2.50x margin threshold."},{"platform":"meta","campaign_name":"Retargeting - US","campaign_id":null,"total_spend":3126.1800000000003,"reported_roas":3.7155602044667932,"true_incremental_roas":2.342074382419582,"incremental_revenue":7321.74609283245,"confidence_interval":[1.1284478774200628,3.555700887419101],"confidence_level":0.95,"standard_error":0.6029257084426153,"non_incremental":false,"status":"estimated","effect_label":"positive","warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"mde80":1.7254483684470001,"action":"hold","action_display":"HOLD (keep current budget)","engine_action":"KEEP","engine_action_reason":"95% interval includes the 2.50x margin threshold.","report_action_under_validation_gate":"KEEP — hold","report_action_reason":"Validation hold. Provisional priority: KEEP. 95% interval includes the 2.50x margin threshold."}],"warnings":{"data_quality":[],"data_quality_notes":[],"model":["Observational association: causal interpretation requires exogenous spend and a valid model"],"campaign":{"Search - Brand":["Observational association: causal interpretation requires exogenous spend and a valid model"],"Search - Non-Brand":["Observational association: causal interpretation requires exogenous spend and a valid model"],"Shopping - US":["Observational association: causal interpretation requires exogenous spend and a valid model"],"Lookalike - US":["Observational association: causal interpretation requires exogenous spend and a valid model"],"Prospecting - US":["Observational association: causal interpretation requires exogenous spend and a valid model"],"Retargeting - US":["Observational association: causal interpretation requires exogenous spend and a valid model"]},"input_files":[],"identification_limitations":["HC3 does not correct serial correlation or endogenous spend.","Promotions, omitted channels, nonlinear seasonality, carryover, saturation and interactions can bias estimates.","Missing campaign-date rows are treated as zero spend; missing interior Shopify days disable campaign inference.","Intervals are marginal 95% HC3 intervals, conditional on observed spend, and do not establish real-world causality.","Validation v2 calibration found bias with endogenous (demand-following) spend and with carryover/adstock (scenarios S4 and S5 FAIL in validation/v2-calibration-2026-11-09.md); validate material budget changes with a controlled holdout."]},"model_diagnostics":{"status":"estimated","method":"joint_revenue_ols_hc3","n_obs":60,"n_parameters":14,"residual_df":46,"r_squared":0.36716845121920993,"condition_number":9.418426654518314,"durbin_watson":2.2846769685758033,"confidence_level":0.95,"critical_value":2.012895598919429,"controls":["const","dow_1","dow_2","dow_3","dow_4","dow_5","dow_6","trend"],"warnings":["Observational association: causal interpretation requires exogenous spend and a valid model"],"non_incremental_rule":"95% interval includes zero; screening flag, not proof of zero lift","effect_label_rule":"Practical equivalence first (CI inside +/-0.2x), then sign, else inconclusive"},"legacy_health_alerts":[{"severity":"critical","title":"High Duplication Rate","message":"Ad platforms are over-reporting conversions by 55%. More than 30% of reported conversions have no matching e-commerce order.","metric":"duplication_rate","value":0.5548,"threshold":0.3},{"severity":"critical","title":"Severe ROAS Inflation","message":"Reported ROAS (4.77x) is inflated by 74% versus true incremental ROAS (1.22x). Ad spend may not be generating real returns.","metric":"inflation_rate","value":0.7433994731257337,"threshold":0.6},{"severity":"info","title":"No Brand Search Data","message":"GSC brand search data was not provided. Cannibalization scoring is disabled. Upload GSC data for a more complete audit.","metric":"gsc_data","value":0,"threshold":0}],"legacy_health_alerts_note":"Legacy dashboard heuristics from ad_audit.engine.health_checks.run_health_checks (the Streamlit Dashboard shows the same alerts). They are not part of the campaign inference. duplication_rate is (platform-reported conversions - Shopify orders) / platform-reported conversions, from aggregate counts, not order-level matching. inflation_rate is (platform ROAS - estimated iROAS) / platform ROAS: estimated iROAS is that fraction BELOW platform ROAS. Quote these messages verbatim; do not re-express the percentages.","mde80_definition":"Minimum detectable effect at 80% power, two-sided 95%: SE x factor(t, residual df) (scripts/run_v2_validation.mde_factor). A true iROAS that differs from a reference value by less than this is unlikely to be distinguished from it."},"report_markdown":"# Ad attribution audit — report 20261114T064657Z-4887b8cc\n\nData window: 2024-01-01 to 2024-02-29 (60 days); Shopify input: orders. Method: joint_revenue_ols_hc3 (model status: estimated).\n\n## Headline (all campaigns combined)\n\n- Total ad spend: $13,115\n- Platform-reported ROAS: 4.77x ($62,537 claimed by platforms)\n- Estimated store incremental ROAS (iROAS): 1.22x, 95% CI [-0.02, 2.47]x, label: inconclusive, MDE80 1.77x\n- Estimated incremental revenue: $16,047\n- Estimated iROAS is 74% below platform-reported ROAS\n\n## Decision threshold\n\nAssumed contribution margin: 40%. Break-even iROAS = 1/margin = 2.50x. SCALE if the entire 95% CI exceeds this threshold; KILL if below; KEEP otherwise. Customer margin unknown: revenue-iROAS priorities, not profit decisions.\n\n## Per-campaign results\n\n| Platform | Campaign | Spend | Platform ROAS | Est. iROAS | 95% CI | Label | MDE80 | Action |\n|---|---|---:|---:|---:|---|---|---:|---|\n| google_ads | Search - Brand | $1,250 | 4.72x | -0.00x | [-2.60, 2.60]x | inconclusive | 3.70x | HOLD (keep current budget) |\n| google_ads | Search - Non-Brand | $1,721 | 4.71x | -0.82x | [-4.10, 2.45]x | inconclusive | 4.65x | KILL |\n| google_ads | Shopping - US | $2,309 | 4.98x | -0.90x | [-3.36, 1.57]x | inconclusive | 3.51x | KILL |\n| meta | Lookalike - US | $2,516 | 5.09x | 2.20x | [0.75, 3.66]x | positive | 2.07x | HOLD (keep current budget) |\n| meta | Prospecting - US | $2,193 | 5.75x | 3.04x | [1.32, 4.77]x | positive | 2.45x | HOLD (keep current budget) |\n| meta | Retargeting - US | $3,126 | 3.72x | 2.34x | [1.13, 3.56]x | positive | 1.73x | HOLD (keep current budget) |\n\nAction reasons (engine rule, `scripts/gate1_pdf.action_for_interval`):\n\n- **Search - Brand** — HOLD (keep current budget): 95% interval includes the 2.50x margin threshold.\n- **Search - Non-Brand** — KILL: Entire 95% interval is below the 2.50x margin threshold.\n- **Shopping - US** — KILL: Entire 95% interval is below the 2.50x margin threshold.\n- **Lookalike - US** — HOLD (keep current budget): 95% interval includes the 2.50x margin threshold.\n- **Prospecting - US** — HOLD (keep current budget): 95% interval includes the 2.50x margin threshold.\n- **Retargeting - US** — HOLD (keep current budget): 95% interval includes the 2.50x margin threshold.\n\n**Validation hold.** The engine's validation gate is `FAIL` (validation/v2-calibration-2026-11-09.md). The engine's own report renderer therefore shows every action as \"KEEP — hold\" with the above as a *provisional priority*. Treat SCALE/KILL as priorities to test with a controlled holdout, not as instructions.\n\n## Inconclusive / unavailable\n\n- Search - Brand: 95% CI [-2.60, 2.60]x includes zero but is not inside the +/-0.2x practical-zero band (width 5.20x; MDE80 3.70x). The data cannot tell whether this campaign adds revenue; that is an answer, not a failure.\n- Search - Non-Brand: 95% CI [-4.10, 2.45]x includes zero but is not inside the +/-0.2x practical-zero band (width 6.54x; MDE80 4.65x). The data cannot tell whether this campaign adds revenue; that is an answer, not a failure.\n- Shopping - US: 95% CI [-3.36, 1.57]x includes zero but is not inside the +/-0.2x practical-zero band (width 4.93x; MDE80 3.51x). The data cannot tell whether this campaign adds revenue; that is an answer, not a failure.\n\n## Warnings\n\n- Model: Observational association: causal interpretation requires exogenous spend and a valid model\n\nStanding identification limits of this method:\n\n- HC3 does not correct serial correlation or endogenous spend.\n- Promotions, omitted channels, nonlinear seasonality, carryover, saturation and interactions can bias estimates.\n- Missing campaign-date rows are treated as zero spend; missing interior Shopify days disable campaign inference.\n- Intervals are marginal 95% HC3 intervals, conditional on observed spend, and do not establish real-world causality.\n- Validation v2 calibration found bias with endogenous (demand-following) spend and with carryover/adstock (scenarios S4 and S5 FAIL in validation/v2-calibration-2026-11-09.md); validate material budget changes with a controlled holdout.\n\n## Model diagnostics\n\nn_obs=60, parameters=14, residual df=46, R²=0.367, Durbin-Watson=2.28, condition number=9.4, controls=const, dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, trend.\n\n## Legacy dashboard alerts (not campaign inference)\n\nLegacy dashboard heuristics from ad_audit.engine.health_checks.run_health_checks (the Streamlit Dashboard shows the same alerts). They are not part of the campaign inference. duplication_rate is (platform-reported conversions - Shopify orders) / platform-reported conversions, from aggregate counts, not order-level matching. inflation_rate is (platform ROAS - estimated iROAS) / platform ROAS: estimated iROAS is that fraction BELOW platform ROAS. Quote these messages verbatim; do not re-express the percentages.\n\n- critical: High Duplication Rate — Ad platforms are over-reporting conversions by 55%. More than 30% of reported conversions have no matching e-commerce order.\n- critical: Severe ROAS Inflation — Reported ROAS (4.77x) is inflated by 74% versus true incremental ROAS (1.22x). Ad spend may not be generating real returns.\n- info: No Brand Search Data — GSC brand search data was not provided. Cannibalization scoring is disabled. Upload GSC data for a more complete audit.\n\nMDE80: Minimum detectable effect at 80% power, two-sided 95%: SE x factor(t, residual df) (scripts/run_v2_validation.mde_factor). A true iROAS that differs from a reference value by less than this is unlikely to be distinguished from it.\n\n","artifacts_dir":"/Users/chao/dev/ad-attribution-auditor/agent_native/runs/20261114T064657Z-4887b8cc"}
+
+=== ASSISTANT ===
+# Ad Attribution Audit: report `20261114T064657Z-4887b8cc`
+
+The audit covers 2024-01-01 to 2024-02-29 (60 days), using your Shopify order export. The method is a joint revenue regression with HC3 intervals, and the model was estimated successfully.
+
+## Headline (all campaigns combined)
+
+- **Total ad spend:** $13,115
+- **Platform-reported ROAS:** 4.77x (platforms claim $62,537)
+- **Estimated store iROAS:** **1.22x, 95% CI [-0.02, 2.47]x**, label **inconclusive**, MDE80 1.77x
+- **Estimated incremental revenue:** $16,047
+- The tool says: "Estimated iROAS is 74% below platform-reported ROAS."
+- **Margin:** **assumed** 40%, so break-even iROAS is **2.50x**. Because your real margin isn't known, the actions below rank campaigns by revenue return. They are **not profit decisions**.
+
+## Per-campaign results
+
+| Platform | Campaign | Spend | Platform ROAS | Est. iROAS | 95% CI | Label | MDE80 | Action |
+|---|---|---:|---:|---:|---|---|---:|---|
+| google_ads | Search - Brand | $1,250 | 4.72x | -0.00x | [-2.60, 2.60]x | inconclusive | 3.70x | HOLD |
+| google_ads | Search - Non-Brand | $1,721 | 4.71x | -0.82x | [-4.10, 2.45]x | inconclusive | 4.65x | KILL (provisional) |
+| google_ads | Shopping - US | $2,309 | 4.98x | -0.90x | [-3.36, 1.57]x | inconclusive | 3.51x | KILL (provisional) |
+| meta | Lookalike - US | $2,516 | 5.09x | 2.20x | [0.75, 3.66]x | positive | 2.07x | HOLD |
+| meta | Prospecting - US | $2,193 | 5.75x | 3.04x | [1.32, 4.77]x | positive | 2.45x | HOLD |
+| meta | Retargeting - US | $3,126 | 3.72x | 2.34x | [1.13, 3.56]x | positive | 1.73x | HOLD |
+
+**⚠️ Validation hold is in effect.** The engine's validation gate is `FAIL`, so it shows every action as "KEEP — hold". The SCALE/KILL calls above are **provisional priorities to test**, not instructions.
+
+## What's conclusive and what isn't
+
+- **The three Meta campaigns are labeled positive.** Their whole 95% interval is above zero, so the data points to them adding revenue. Each interval also contains the 2.50x break-even, so whether they pay for themselves at a 40% margin is still open. That's why they're HOLD.
+- **The three Google campaigns are inconclusive.** Their intervals include zero and are very wide (for example, Search - Non-Brand runs from -4.10x to 2.45x). The data can't tell whether they add revenue at all. That is a real answer, not a failure. Their MDE80 values (3.51x–4.65x) mean a campaign's true effect would have to be roughly that large to be detected reliably with 60 days of data.
+- **Why can a campaign be both inconclusive and KILL?** The label asks whether the campaign adds *any* revenue, and the data can't say. The action asks whether it clears *break-even*. For Non-Brand and Shopping, the whole interval is below 2.50x, so even their best plausible result falls short of break-even at the assumed margin. If your real margin is higher, break-even drops and these calls could change.
+- **The store-level result is inconclusive too**, with an interval of [-0.02, 2.47]x.
+
+## Warnings
+
+- **Model warning:** "Observational association: causal interpretation requires exogenous spend and a valid model." In plain words, these numbers show association, and they only become cause-and-effect if spend wasn't following demand.
+- **No data-quality or input-file warnings** came up in the audit. From validation: the window is the 60-day minimum (90 is recommended, which partly explains the wide intervals). Missing campaign-days were treated as zero spend, and you confirmed that's accurate. The Email column wasn't blank, but you confirmed it's demo data.
+- **Standing method limits:**
+  - HC3 does not correct serial correlation or endogenous spend.
+  - Promotions, omitted channels, nonlinear seasonality, carryover, saturation and interactions can bias the estimates.
+  - The intervals are conditional on the spend you observed and don't establish real-world causality.
+  - In the engine's own calibration, it was **biased when spend follows demand and when ads have carryover effects** (scenarios S4/S5 failed).
+- **Model diagnostics:** 60 observations, 14 parameters, R² 0.367, Durbin-Watson 2.28, condition number 9.4.
+- **Legacy dashboard alerts.** These are separate from the campaign estimates, and I'm quoting them word for word:
+  - critical: *"Ad platforms are over-reporting conversions by 55%. More than 30% of reported conversions have no matching e-commerce order."*
+  - critical: *"Reported ROAS (4.77x) is inflated by 74% versus true incremental ROAS (1.22x). Ad spend may not be generating real returns."*
+  - info: *"GSC brand search data was not provided. Cannibalization scoring is disabled."*
+
+## Before you act on this
+
+- These are observational estimates from a regression, not a controlled experiment, and they measure **revenue, not profit**.
+- They assume budgets didn't follow expected demand (including automated bidding chasing sales) and that ads affect sales the same day. You didn't say how budgets were set. If either assumption is wrong, treat every number here with extra caution, especially since the engine's calibration showed bias in exactly those cases.
+- **Before cutting the Google campaigns or scaling Meta**, confirm with a controlled holdout. For example, pause Non-Brand and Shopping in some regions or for alternating weeks and compare sales. A longer export (90+ days) and your real margin would also tighten the intervals and the break-even line.
+
+The full report files are in `/Users/chao/dev/ad-attribution-auditor/agent_native/runs/20261114T064657Z-4887b8cc`.
+
+[turn end: subtype=success turns=3 duration_ms=25118 cost_usd=0.2145658]
+
+[run2 tool calls: ['mcp__ad-attribution-auditor__validate_csv', 'mcp__ad-attribution-auditor__validate_csv', 'mcp__ad-attribution-auditor__validate_csv', 'mcp__ad-attribution-auditor__run_audit', 'mcp__ad-attribution-auditor__get_report']]

@@ -1,0 +1,75 @@
+You are going to help me run an Ad Attribution Auditor audit using the "ad-attribution-auditor" MCP tools (validate_csv, run_audit, get_report). Follow the instructions below in order.
+
+## 1. What this is
+
+Ad Attribution Auditor is a one-off incrementality audit for a Shopify store that advertises on Meta and Google. From three CSV exports it estimates incremental revenue per ad dollar (incremental ROAS, "iROAS") for each campaign. The report gives a 95% confidence interval, an evidence label (positive / practically zero / negative / inconclusive / unavailable), a detection limit (MDE80), data-quality and method warnings, and a provisional keep / kill / hold priority compared with your break-even point. The tools compute the estimates and compare them with platform claims.
+
+## 2. What to prepare (three CSV files)
+
+All three files must cover the same date window (90 consecutive days recommended; at least 60 complete days are required for campaign estimates), be saved as UTF-8 CSV with exactly one header row, contain no totals or summary rows, and include every day of the window. Header names are exact (case, spaces and punctuation matter). Numbers must be plain decimals such as `1200.50`: no `$`, no thousands separators like `1,200`, no `N/A`, `--` or `nan`, and no blank cells in required number columns. Dates as `YYYY-MM-DD` are safest.
+
+**File 1: Meta Ads, daily by campaign** (Ads Manager report, breakdown by Day, one row per campaign per day)
+- Required headers: `Day`, `Campaign name`, `Amount spent (USD)`, `Purchases`
+- Optional headers: `Purchase conversion value`, `Purchase ROAS`
+- Spend must be in USD (the header says so). Include days where a campaign spent 0; a missing campaign-day row is treated as zero spend.
+
+**File 2: Google Ads, daily by campaign** (Campaigns report segmented by Day)
+- Required headers: `Day`, `Campaign`, `Cost`, `Conversions`
+- Optional headers: `Conv. value`, `Cost / conv.`
+- Remove the extra title/total lines Google adds above or below the table.
+
+**File 3: Shopify, one of these two forms**
+- (a) Order export, one row per order or line item. Required headers: `Name`, `Email`, `Created at`, `Total`. Optional: `Referring Site`, `Landing Site`. Before sharing, strip customer personal details: delete name/address/phone columns, and keep the `Email` column but make every value blank. Extra line-item rows of the same order may have a blank `Total`.
+- (b) Daily totals, one row per store-local day. Headers must be exactly `date`, `orders`, `revenue`, `currency` and nothing else. `date` is `YYYY-MM-DD`, `orders` is a whole number (0 is allowed on a real zero-order day, and then revenue must be 0), `revenue` is gross order total for that day (refunds not subtracted), `currency` is one 3-letter code such as `USD` for the whole file. No duplicate dates.
+
+Optional but important: your contribution margin, the share of revenue left after product cost, shipping, payment fees and other variable costs (for example 0.35 for 35%). Break-even iROAS is 1 / margin.
+
+## 3. How to connect the tools (only if the tools are not already available)
+
+The tools run locally from a copy of the Ad Attribution Auditor repository with its Python 3.12 virtualenv at `.venv`. Replace `<INSTALL_PATH>` with the absolute path of that folder (for example `/Users/you/dev/ad-attribution-auditor`).
+
+Claude Code (run in a terminal, then start a new Claude Code session):
+
+```
+claude mcp add --scope user ad-attribution-auditor -- <INSTALL_PATH>/.venv/bin/python <INSTALL_PATH>/agent_native/mcp_server.py
+```
+
+Check with `claude mcp list` (it should show `ad-attribution-auditor ... Connected`).
+
+Claude Desktop: open Settings → Developer → Edit Config (the file `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `%APPDATA%\Claude\claude_desktop_config.json` on Windows), add this, save, and fully restart Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "ad-attribution-auditor": {
+      "command": "<INSTALL_PATH>/.venv/bin/python",
+      "args": ["<INSTALL_PATH>/agent_native/mcp_server.py"]
+    }
+  }
+}
+```
+
+If the tools still do not appear, tell me so plainly; do not try to imitate them.
+
+## 4. Steps you (Claude) must follow
+
+1. **Get the three files.** Ask me for them, or for their file paths if you can see my files. If I name a folder, look only for the three CSVs. For each tool call, pass the file either as `path` (the absolute path, when the tools run on the same computer as the files; preferred for large files) or as `content` (the full CSV text, unchanged). Never edit, sample or truncate the data yourself.
+2. **Validate each file** with `validate_csv` (kinds: `meta_ads`, `google_ads`, `shopify_orders` or `shopify_daily`). If `ok` is false, show me the exact errors (they name the file, column, row and value) and help me fix the export. Do not guess, reformat numbers, fill in missing days or drop rows on my behalf without my explicit agreement, and re-validate after any fix. Also tell me every warning, especially missing days, a window shorter than 60 days, date windows that differ between files, or a non-blank Email column.
+3. **Ask for my contribution margin.** If I do not know it, say clearly that the audit will assume 40% (break-even iROAS 2.50x).
+4. **Run the audit** with `run_audit`, passing all three files and the margin (omit `contribution_margin` only if I do not know it). Then call `get_report` with the returned `report_id`.
+5. **Present the report**, using only numbers the tools returned (you may quote `report_markdown` directly):
+   - Headline: total spend, platform-reported ROAS, estimated store iROAS with its 95% confidence interval, and the margin / break-even used and whether it was assumed.
+   - A per-campaign table: platform, campaign, spend, platform ROAS, estimated iROAS, 95% CI, label, MDE80, action.
+   - What is inconclusive and why: a wide interval that includes zero means the data cannot tell; MDE80 shows roughly how large an effect would have to be to be detected reliably with this much data.
+   - Warnings in plain words: every data-quality, model and input warning, and the standing method limits.
+   - **Provisional priorities.** Keep means maintain the budget and validate with a holdout before increasing it. Kill means consider stopping if the holdout confirms the result. Hold means maintain the budget while gathering evidence. State that these priorities use conditional estimates from observational data and are not profit decisions. If the report shows a validation hold, say to maintain current budgets while gathering evidence.
+   - Include the report's holdout design appendix at the end. Use the campaign examples and note any feasibility limits stated there.
+
+## 5. Honest limits (say these plainly)
+
+- "Inconclusive" is a legitimate and common answer, not a failure of the audit. Do not round it into a yes or no.
+- The estimates assume that day-to-day spend changes were not simply following demand (for example raising budgets on days you already expected high sales, or automated bidding chasing sales) and that ads affect sales on the same day (no lagged or carry-over effect). If what I tell you about how budgets were set, promotions, or long purchase cycles suggests these assumptions are wrong, say so and treat the affected numbers with extra caution.
+- These are observational estimates from a regression, not a controlled experiment, and they measure revenue, not profit.
+- Never invent, recompute, extrapolate or "fill in" numbers the tools did not return, and do not re-express the tools' ratios or percentages in your own arithmetic (for example, "inflated by 74%" must not become "74% above"); quote them as given. If something is unavailable, say it is unavailable and quote the reason the tools gave.
+
+Start now by asking me for the three files (or confirming the paths I gave you) and my contribution margin.

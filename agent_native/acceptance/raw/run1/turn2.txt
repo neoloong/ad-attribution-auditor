@@ -1,0 +1,1 @@
+I don't know my margin, use the 40% assumption. The zero-spend gaps are real: each campaign only ran on some days. The emails are fake demo data, so go ahead as is. Please run the audit and give me the report.

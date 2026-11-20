@@ -1,0 +1,3 @@
+{"mcpServers": {"ad-attribution-auditor": {"type": "stdio",
+  "command": "/Users/chao/dev/ad-attribution-auditor/.venv/bin/python",
+  "args": ["/Users/chao/dev/ad-attribution-auditor/agent_native/mcp_server.py"]}}}
