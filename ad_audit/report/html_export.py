@@ -7,6 +7,7 @@ from pathlib import Path
 from jinja2 import Template
 
 from ad_audit.engine.models import AuditResult, AuditMode
+from ad_audit.report.holdout import ACTION_NOTICE, SECTIONS, TITLE, cost_example
 from ad_audit.visualization.charts import (
     reported_vs_true_roas_bar,
     spend_vs_conversions_dual_axis,
@@ -78,6 +79,13 @@ def export_html_report(
         charts=charts,
         ai_summary=ai_summary,
         findings=findings,
+        action_notice=ACTION_NOTICE,
+        holdout_title=TITLE,
+        holdout_sections=SECTIONS,
+        holdout_examples=[
+            (c.campaign_name, cost_example(c.total_spend, c.confidence_interval))
+            for c in result.campaign_results
+        ],
     )
 
     return html

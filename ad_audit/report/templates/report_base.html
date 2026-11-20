@@ -77,6 +77,7 @@
 
     {% if ai_summary %}
     <h2>AI Analysis</h2>
+    <p>{{ action_notice }}</p>
     <div class="summary">
         {{ ai_summary }}
     </div>
@@ -88,6 +89,20 @@
         <li>{{ finding }}</li>
         {% endfor %}
     </ul>
+
+    <h2>{{ holdout_title }}</h2>
+    {% for heading, body in holdout_sections %}
+    <p><strong>{{ heading }}.</strong> {{ body }}</p>
+    {% endfor %}
+    {% if holdout_examples %}
+    <ul>
+        {% for campaign, example in holdout_examples %}
+        <li><strong>{{ campaign | e }}</strong> &mdash; {{ example }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Campaign spend and iROAS intervals are unavailable for cost examples.</p>
+    {% endif %}
 
     <div class="footer">
         <p>Ad Attribution Auditor &mdash; "Don't let Big Tech grade their own homework."</p>

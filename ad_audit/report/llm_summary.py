@@ -11,7 +11,8 @@ You are an expert digital marketing analyst. Given structured audit results comp
 ad platform reported metrics versus actual e-commerce data, write a clear, actionable \
 summary for an e-commerce merchant. Use plain English, avoid jargon, and highlight the most \
 important findings. Structure your response with sections: Overview, Key Findings, \
-and Recommendations."""
+and Recommendations. Recommend holdout validation before changing budgets. Use campaign action labels only \
+when supplied in the results and describe them as provisional priorities."""
 
 
 def _detect_platforms(result: AuditResult) -> str:
