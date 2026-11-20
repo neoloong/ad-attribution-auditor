@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.16, pytest-9.2.0, pluggy-1.7.0
+rootdir: /Users/chao/dev/ad-attribution-auditor
+configfile: pytest.ini
+testpaths: tests
+plugins: cov-7.1.0, anyio-4.16.0
+collected 181 items
+
+tests/test_connectors/test_google_ads_connector.py ...........           [  6%]
+tests/test_connectors/test_meta_connector.py ..........                  [ 11%]
+tests/test_connectors/test_shopify_connector.py ..........               [ 17%]
+tests/test_engine/test_aggregate_audit.py ...........                    [ 23%]
+tests/test_engine/test_campaign_regression.py ...........                [ 29%]
+tests/test_engine/test_cannibalization.py ...                            [ 30%]
+tests/test_engine/test_deduplication.py ...                              [ 32%]
+tests/test_engine/test_edge_cases.py ..........                          [ 38%]
+tests/test_engine/test_health_checks.py ........                         [ 42%]
+tests/test_engine/test_incremental_roas.py .....                         [ 45%]
+tests/test_engine/test_organic_baseline.py ..............                [ 53%]
+tests/test_engine/test_organic_baseline_regression.py .................. [ 62%]
+.                                                                        [ 63%]
+tests/test_engine/test_period_comparison.py ....                         [ 65%]
+tests/test_engine/test_phase2_boundaries.py ...................          [ 76%]
+tests/test_engine/test_search_term_analysis.py .....                     [ 79%]
+tests/test_engine/test_user_level_audit.py ......                        [ 82%]
+tests/test_ingestion/test_loader.py ...                                  [ 83%]
+tests/test_ingestion/test_normalizer.py .........                        [ 88%]
+tests/test_ingestion/test_validators.py ......                           [ 92%]
+tests/test_integration/test_end_to_end.py ..............                 [100%]
+
+============================= 181 passed in 0.88s ==============================

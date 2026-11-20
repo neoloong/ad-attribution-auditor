@@ -1,0 +1,327 @@
+{
+  "dataset": {
+    "seed": 20261112,
+    "days": 90,
+    "start": "2026-08-01",
+    "end": "2026-10-29",
+    "aov": 100,
+    "orders": 5799,
+    "organic_orders": 4917,
+    "organic_daily_mean": 54.63333333333333,
+    "campaigns": [
+      {
+        "name": "Meta Prospecting",
+        "platform": "meta",
+        "class": "HIGH",
+        "true_roas": 4.0,
+        "spend_unit": 100,
+        "claimed_roas": 5.0
+      },
+      {
+        "name": "Google Generic",
+        "platform": "google_ads",
+        "class": "LOW",
+        "true_roas": 0.5,
+        "spend_unit": 200,
+        "claimed_roas": 3.0
+      },
+      {
+        "name": "Google Brand",
+        "platform": "google_ads",
+        "class": "ZERO",
+        "true_roas": 0.0,
+        "spend_unit": 100,
+        "claimed_roas": 8.0
+      }
+    ],
+    "common_zero_spend_days": 7
+  },
+  "input_validation": {
+    "meta_ads": {
+      "rows": 90,
+      "valid": true,
+      "missing_required": [],
+      "missing_optional": [],
+      "extra_columns": []
+    },
+    "google_ads": {
+      "rows": 180,
+      "valid": true,
+      "missing_required": [],
+      "missing_optional": [],
+      "extra_columns": []
+    },
+    "shopify_orders": {
+      "rows": 5799,
+      "valid": true,
+      "missing_required": [],
+      "missing_optional": [],
+      "extra_columns": []
+    },
+    "gsc_brand_search": {
+      "rows": 90,
+      "valid": true,
+      "missing_required": [],
+      "missing_optional": [],
+      "extra_columns": []
+    }
+  },
+  "combined": {
+    "summary": {
+      "mode": "aggregate",
+      "reported_roas": 4.819327731092437,
+      "true_incremental_roas": 1.2549474084841006,
+      "inflation_rate": 0.7396011480216078,
+      "confidence_interval": [
+        1.1582612651528483,
+        1.3516335518153528
+      ],
+      "confidence_level": 0.95,
+      "non_incremental": false,
+      "estimation_method": "joint_revenue_ols_hc3",
+      "duplication_rate": 0.0,
+      "cannibalization_score": 0.4819,
+      "organic_baseline_conversions": 54.47741722602612,
+      "incremental_conversions_per_day": 9.955916107307223,
+      "correlation_mean": 0.5233529253840852,
+      "total_matched_orders": 0,
+      "truly_incremental_orders": 0,
+      "cannibalized_orders": 0
+    },
+    "incremental_roas": {
+      "reported_roas": 4.819327731092437,
+      "true_incremental_roas": 1.2549474084841006,
+      "inflation_rate": 0.7396011480216078,
+      "total_spend": 71400.0,
+      "reported_revenue": 344100.0,
+      "incremental_revenue": 89603.24496576478,
+      "confidence_interval": [
+        1.1582612651528483,
+        1.3516335518153528
+      ],
+      "confidence_level": 0.95,
+      "standard_error": 0.04857501224312152,
+      "non_incremental": false,
+      "estimation_method": "joint_revenue_ols_hc3"
+    },
+    "deduplication": {
+      "platform_reported_conversions": 3441,
+      "actual_conversions": 5799,
+      "overlap_count": 3428,
+      "duplication_rate": 0.0
+    },
+    "cannibalization": {
+      "cannibalized_days": 40,
+      "total_days": 83,
+      "cannibalization_score": 0.4819,
+      "cannibalized_revenue_fraction": 0.4928
+    },
+    "campaign_model": {
+      "status": "estimated",
+      "method": "joint_revenue_ols_hc3",
+      "n_obs": 90,
+      "n_parameters": 11,
+      "residual_df": 79,
+      "r_squared": 0.9588312293236341,
+      "condition_number": 11.273492993137008,
+      "durbin_watson": 2.029395263116244,
+      "confidence_level": 0.95,
+      "critical_value": 1.9904502102301287,
+      "controls": [
+        "const",
+        "dow_1",
+        "dow_2",
+        "dow_3",
+        "dow_4",
+        "dow_5",
+        "dow_6",
+        "trend"
+      ],
+      "campaigns": [
+        {
+          "column": "campaign_spend_0",
+          "platform": "google_ads",
+          "campaign_name": "Google Brand",
+          "campaign_id": null,
+          "reported_revenue": 151200.0
+        },
+        {
+          "column": "campaign_spend_1",
+          "platform": "google_ads",
+          "campaign_name": "Google Generic",
+          "campaign_id": null,
+          "reported_revenue": 104400.0
+        },
+        {
+          "column": "campaign_spend_2",
+          "platform": "meta",
+          "campaign_name": "Meta Prospecting",
+          "campaign_id": null,
+          "reported_revenue": 88500.0
+        }
+      ],
+      "warnings": [
+        "Observational association: causal interpretation requires exogenous spend and a valid model"
+      ],
+      "non_incremental_rule": "95% interval includes zero; screening flag, not proof of zero lift"
+    },
+    "legacy_baseline": {
+      "baseline_daily": 55.1242994329627,
+      "method": "regression",
+      "r_squared": 0.6440165845616599,
+      "ad_marginal_effect": 0.01173407634500495,
+      "n_obs": 90,
+      "warnings": [],
+      "model_summary": "Multivariate OLS Regression (n=90)\n  Intercept (baseline) = 51.8687\n  Ad spend coefficient = 0.011734\n  R\u00b2 = 0.6440\n  Durbin-Watson = 1.961\n"
+    },
+    "alerts": [
+      {
+        "severity": "critical",
+        "title": "Severe ROAS Inflation",
+        "message": "Reported ROAS (4.82x) is inflated by 74% versus true incremental ROAS (1.25x). Ad spend may not be generating real returns.",
+        "metric": "inflation_rate",
+        "value": 0.7396011480216078,
+        "threshold": 0.6
+      },
+      {
+        "severity": "critical",
+        "title": "High Cannibalization",
+        "message": "Cannibalization score is 48% \u2014 on 48% of spend-on days, ad platform claims overlap with organic brand search. A large share of 'conversions' may be users who would have purchased anyway.",
+        "metric": "cannibalization_score",
+        "value": 0.4819,
+        "threshold": 0.4
+      }
+    ],
+    "ground_truth_roas": 1.2352941176470589,
+    "ci_covers_truth": true,
+    "absolute_error": 0.019653290837041704
+  },
+  "campaign_results": [
+    {
+      "campaign": "Meta Prospecting",
+      "class": "HIGH",
+      "platform": "meta",
+      "incremental_roas": {
+        "platform": "meta",
+        "campaign_name": "Meta Prospecting",
+        "campaign_id": null,
+        "total_spend": 17700.0,
+        "reported_roas": 5.0,
+        "true_incremental_roas": 4.032364904797322,
+        "incremental_revenue": 71372.8588149126,
+        "confidence_interval": [
+          3.7532572262127597,
+          4.311472583381884
+        ],
+        "confidence_level": 0.95,
+        "standard_error": 0.14022339124588942,
+        "non_incremental": false,
+        "status": "estimated",
+        "warnings": [
+          "Observational association: causal interpretation requires exogenous spend and a valid model"
+        ]
+      },
+      "ground_truth": {
+        "roas": 4.0,
+        "incremental_revenue": 70800,
+        "incremental_orders": 708,
+        "spend": 17700.0
+      },
+      "absolute_error": 0.03236490479732179,
+      "relative_error": 0.008091226199330448,
+      "tolerance": 0.8,
+      "point_check_pass": true,
+      "ci_covers_truth": true,
+      "non_incremental_signal": false,
+      "action": "SCALE",
+      "action_reason": "Entire 95% interval exceeds 1.0x revenue break-even; test a staged increase."
+    },
+    {
+      "campaign": "Google Generic",
+      "class": "LOW",
+      "platform": "google_ads",
+      "incremental_roas": {
+        "platform": "google_ads",
+        "campaign_name": "Google Generic",
+        "campaign_id": null,
+        "total_spend": 34800.0,
+        "reported_roas": 3.0,
+        "true_incremental_roas": 0.5903965779103095,
+        "incremental_revenue": 20545.800911278773,
+        "confidence_interval": [
+          0.4711363065722587,
+          0.7096568492483604
+        ],
+        "confidence_level": 0.95,
+        "standard_error": 0.05991622936615049,
+        "non_incremental": false,
+        "status": "estimated",
+        "warnings": [
+          "Observational association: causal interpretation requires exogenous spend and a valid model"
+        ]
+      },
+      "ground_truth": {
+        "roas": 0.5,
+        "incremental_revenue": 17400,
+        "incremental_orders": 174,
+        "spend": 34800.0
+      },
+      "absolute_error": 0.09039657791030953,
+      "relative_error": 0.18079315582061906,
+      "tolerance": 0.1,
+      "point_check_pass": true,
+      "ci_covers_truth": true,
+      "non_incremental_signal": false,
+      "action": "KILL",
+      "action_reason": "Entire 95% interval is below 1.0x revenue break-even; test a pause."
+    },
+    {
+      "campaign": "Google Brand",
+      "class": "ZERO",
+      "platform": "google_ads",
+      "incremental_roas": {
+        "platform": "google_ads",
+        "campaign_name": "Google Brand",
+        "campaign_id": null,
+        "total_spend": 18900.0,
+        "reported_roas": 8.0,
+        "true_incremental_roas": -0.1225087174828883,
+        "incremental_revenue": -2315.414760426589,
+        "confidence_interval": [
+          -0.37359427516963883,
+          0.1285768402038622
+        ],
+        "confidence_level": 0.95,
+        "standard_error": 0.12614510847659982,
+        "non_incremental": true,
+        "status": "estimated",
+        "warnings": [
+          "Observational association: causal interpretation requires exogenous spend and a valid model"
+        ]
+      },
+      "ground_truth": {
+        "roas": 0.0,
+        "incremental_revenue": 0,
+        "incremental_orders": 0,
+        "spend": 18900.0
+      },
+      "absolute_error": 0.1225087174828883,
+      "relative_error": null,
+      "tolerance": 0.1,
+      "point_check_pass": false,
+      "ci_covers_truth": true,
+      "non_incremental_signal": true,
+      "action": "KILL",
+      "action_reason": "Entire 95% interval is below 1.0x revenue break-even; test a pause."
+    }
+  ],
+  "input_sha256": {
+    "daily_combined.csv": "400e38336bab05b28db84f9e9f16dcaaeef66aae927c716ee00d2921c2470e2f",
+    "google_ads.csv": "0a9b12e908b3d395d0d1c582e36a277a18459a5f1d514be79f5b838e516b2568",
+    "ground_truth_daily.csv": "a32e200340424602af9e8b1f19a59b0fe47007b71ce74454a8e788a3e3a6b402",
+    "ground_truth_orders.csv": "b6ae99826fd1a21ecfc98fe7716c05552f1ede608b44eb3296cc71baeba9fad3",
+    "gsc_brand_search.csv": "ecfb9e4f888090e3d1b189f49130bfe9444f52077c314b63a866d151797e6b27",
+    "meta_ads.csv": "3b441b7fa350c742b496ce30cb53153b128536eb23e013c9c5b78bc155d7c6bb",
+    "shopify_orders.csv": "0347885d453133a42d32931217abb91374d1aece84c37b194968d39a9f47559d"
+  }
+}

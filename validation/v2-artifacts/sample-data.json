@@ -1,0 +1,254 @@
+{
+  "dataset": {
+    "seed": 20261108,
+    "days": 90,
+    "start": "2026-08-01",
+    "end": "2026-10-29",
+    "aov": 100,
+    "orders": 5797,
+    "organic_orders": 4920,
+    "organic_daily_mean": 54.666666666666664,
+    "campaigns": [
+      {
+        "name": "Meta Prospecting",
+        "platform": "meta",
+        "class": "HIGH",
+        "true_roas": 4.0,
+        "spend_unit": 100,
+        "claimed_roas": 5.0
+      },
+      {
+        "name": "Google Generic",
+        "platform": "google_ads",
+        "class": "LOW",
+        "true_roas": 0.5,
+        "spend_unit": 200,
+        "claimed_roas": 3.0
+      },
+      {
+        "name": "Google Brand",
+        "platform": "google_ads",
+        "class": "ZERO",
+        "true_roas": 0.0,
+        "spend_unit": 100,
+        "claimed_roas": 8.0
+      }
+    ],
+    "common_zero_spend_days": 7
+  },
+  "combined": {
+    "summary": {
+      "mode": "aggregate",
+      "reported_roas": 4.8351145038167935,
+      "true_incremental_roas": 1.329552821654814,
+      "inflation_rate": 0.7250214404218809,
+      "confidence_interval": [
+        1.2172236522214988,
+        1.4418819910881293
+      ],
+      "confidence_level": 0.95,
+      "non_incremental": false,
+      "estimation_method": "joint_revenue_ols_hc3",
+      "duplication_rate": 0.0,
+      "cannibalization_score": 0.4819,
+      "organic_baseline_conversions": 54.734921131290086,
+      "incremental_conversions_per_day": 9.67618997982117,
+      "correlation_mean": 0.48681905766077616,
+      "total_matched_orders": 0,
+      "truly_incremental_orders": 0,
+      "cannibalized_orders": 0
+    },
+    "incremental_roas": {
+      "reported_roas": 4.8351145038167935,
+      "true_incremental_roas": 1.329552821654814,
+      "inflation_rate": 0.7250214404218809,
+      "total_spend": 65500.0,
+      "reported_revenue": 316700.0,
+      "incremental_revenue": 87085.70981839031,
+      "confidence_interval": [
+        1.2172236522214988,
+        1.4418819910881293
+      ],
+      "confidence_level": 0.95,
+      "standard_error": 0.056434051379927894,
+      "non_incremental": false,
+      "estimation_method": "joint_revenue_ols_hc3"
+    },
+    "deduplication": {
+      "platform_reported_conversions": 3167,
+      "actual_conversions": 5797,
+      "overlap_count": 3167,
+      "duplication_rate": 0.0
+    },
+    "cannibalization": {
+      "cannibalized_days": 40,
+      "total_days": 83,
+      "cannibalization_score": 0.4819,
+      "cannibalized_revenue_fraction": 0.4875
+    },
+    "campaign_model": {
+      "status": "estimated",
+      "method": "joint_revenue_ols_hc3",
+      "n_obs": 90,
+      "n_parameters": 11,
+      "residual_df": 79,
+      "r_squared": 0.9571226213028791,
+      "condition_number": 10.864539087714828,
+      "durbin_watson": 1.9311347892296584,
+      "confidence_level": 0.95,
+      "critical_value": 1.9904502102301287,
+      "controls": [
+        "const",
+        "dow_1",
+        "dow_2",
+        "dow_3",
+        "dow_4",
+        "dow_5",
+        "dow_6",
+        "trend"
+      ],
+      "campaigns": [
+        {
+          "column": "campaign_spend_0",
+          "platform": "google_ads",
+          "campaign_name": "Google Brand",
+          "campaign_id": null,
+          "reported_revenue": 134400.0
+        },
+        {
+          "column": "campaign_spend_1",
+          "platform": "google_ads",
+          "campaign_name": "Google Generic",
+          "campaign_id": null,
+          "reported_revenue": 91800.0
+        },
+        {
+          "column": "campaign_spend_2",
+          "platform": "meta",
+          "campaign_name": "Meta Prospecting",
+          "campaign_id": null,
+          "reported_revenue": 90500.0
+        }
+      ],
+      "warnings": [
+        "Observational association: causal interpretation requires exogenous spend and a valid model"
+      ],
+      "non_incremental_rule": "95% interval includes zero; screening flag, not proof of zero lift",
+      "effect_label_rule": "Practical equivalence first (CI inside +/-0.2x), then sign, else inconclusive"
+    },
+    "legacy_baseline": {
+      "baseline_daily": 56.216161981670695,
+      "method": "regression",
+      "r_squared": 0.5356472858864432,
+      "ad_marginal_effect": 0.011260235445032607,
+      "n_obs": 90,
+      "warnings": [],
+      "model_summary": "Multivariate OLS Regression (n=90)\n  Intercept (baseline) = 50.8834\n  Ad spend coefficient = 0.011260\n  R\u00b2 = 0.5356\n  Durbin-Watson = 2.104\n"
+    },
+    "alerts": [
+      {
+        "severity": "critical",
+        "title": "Severe ROAS Inflation",
+        "message": "Reported ROAS (4.84x) is inflated by 73% versus true incremental ROAS (1.33x). Ad spend may not be generating real returns.",
+        "metric": "inflation_rate",
+        "value": 0.7250214404218809,
+        "threshold": 0.6
+      },
+      {
+        "severity": "critical",
+        "title": "High Cannibalization",
+        "message": "Cannibalization score is 48% \u2014 on 48% of spend-on days, ad platform claims overlap with organic brand search. A large share of 'conversions' may be users who would have purchased anyway.",
+        "metric": "cannibalization_score",
+        "value": 0.4819,
+        "threshold": 0.4
+      }
+    ],
+    "ground_truth_roas": 1.3389312977099237,
+    "ci_covers_truth": true,
+    "absolute_error": 0.009378476055109664
+  },
+  "campaign_results": [
+    {
+      "campaign": "Meta Prospecting",
+      "platform": "meta",
+      "incremental_roas": {
+        "platform": "meta",
+        "campaign_name": "Meta Prospecting",
+        "campaign_id": null,
+        "total_spend": 18100.0,
+        "reported_roas": 5.0,
+        "true_incremental_roas": 3.9472676211431383,
+        "incremental_revenue": 71445.5439426908,
+        "confidence_interval": [
+          3.7277315246195997,
+          4.166803717666677
+        ],
+        "confidence_level": 0.95,
+        "standard_error": 0.11029469383117943,
+        "non_incremental": false,
+        "status": "estimated",
+        "effect_label": "positive",
+        "warnings": [
+          "Observational association: causal interpretation requires exogenous spend and a valid model"
+        ]
+      },
+      "action": "SCALE",
+      "action_reason": "Entire 95% interval exceeds the 2.50x margin threshold."
+    },
+    {
+      "campaign": "Google Generic",
+      "platform": "google_ads",
+      "incremental_roas": {
+        "platform": "google_ads",
+        "campaign_name": "Google Generic",
+        "campaign_id": null,
+        "total_spend": 30600.0,
+        "reported_roas": 3.0,
+        "true_incremental_roas": 0.5033074465069785,
+        "incremental_revenue": 15401.207863113541,
+        "confidence_interval": [
+          0.38350621303206317,
+          0.6231086799818937
+        ],
+        "confidence_level": 0.95,
+        "standard_error": 0.06018800814970613,
+        "non_incremental": false,
+        "status": "estimated",
+        "effect_label": "positive",
+        "warnings": [
+          "Observational association: causal interpretation requires exogenous spend and a valid model"
+        ]
+      },
+      "action": "KILL",
+      "action_reason": "Entire 95% interval is below the 2.50x margin threshold."
+    },
+    {
+      "campaign": "Google Brand",
+      "platform": "google_ads",
+      "incremental_roas": {
+        "platform": "google_ads",
+        "campaign_name": "Google Brand",
+        "campaign_id": null,
+        "total_spend": 16800.0,
+        "reported_roas": 8.0,
+        "true_incremental_roas": 0.014223691225355493,
+        "incremental_revenue": 238.95801258597228,
+        "confidence_interval": [
+          -0.2399952629358812,
+          0.2684426453865922
+        ],
+        "confidence_level": 0.95,
+        "standard_error": 0.12771932342474662,
+        "non_incremental": true,
+        "status": "estimated",
+        "effect_label": "inconclusive",
+        "warnings": [
+          "Observational association: causal interpretation requires exogenous spend and a valid model"
+        ]
+      },
+      "action": "KILL",
+      "action_reason": "Entire 95% interval is below the 2.50x margin threshold."
+    }
+  ],
+  "gate": "FAIL"
+}

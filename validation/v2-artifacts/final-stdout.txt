@@ -1,0 +1,23 @@
+Validation v2: 24,000 datasets (4,000 per scenario); criteria unchanged.
+S1 FAIL (bias); S2 PASS; S3 PASS under its applicable criteria, with undercoverage warning; S4 FAIL (bias); S5 FAIL (bias); S6 PASS.
+Coverage: S2 96.05–96.35%, exact CP lower bounds 95.40–95.72%; S3 90.85–92.00%; S4 Brand 0.05%; S5 Meta 44.82%.
+Inference swap: NO; HC3 retained. HAC4/HAC7 do not dominate.
+Spec gap REPRODUCES: original Brand base 0.014224x, month 0.146670x, gap +0.132447x. Organic/noise decomposition +0.052113x/+0.080334x; mid-repair hypothesis unsupported.
+Fixes: missing interior Shopify days return campaign unavailable with explicit result warnings; PDF uses 1/contribution-margin, default assumed 40% = 2.50x, unknown-margin actions labeled revenue priorities.
+Tests: 214 passed. Three-page PDF verified with PDFKit and visually inspected. No commits or pushes.
+Changed source/report files:
+  ad_audit/engine/aggregate_audit.py
+  ad_audit/engine/campaign_regression.py
+  ad_audit/engine/models.py
+  scripts/gate1_pdf.py
+  scripts/run_gate1_validation.py
+  scripts/run_v2_validation.py
+  scripts/verify_gate1_pdf.swift
+  tests/test_engine/test_campaign_regression.py
+  tests/test_engine/test_effect_labels.py
+  tests/test_report/test_sample_pdf.py
+  sample/sample-report-2026-11-08.pdf
+  validation/v2-preregistration.md
+  validation/v2-calibration-2026-11-09.md
+  validation/v2-artifacts/ (frozen source, preregistration receipt, raw runs, summary, spec fits, verification logs and manifests)
+Full changed-file list: validation/v2-artifacts/files-changed.txt

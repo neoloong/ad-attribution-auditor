@@ -45,3 +45,6 @@ web/.next/
 web/out/
 web/next-env.d.ts
 web/.vercel
+
+# Generated validation raw output (reproducible via scripts/run_v2_validation.py)
+validation/v2-artifacts/replicates.csv

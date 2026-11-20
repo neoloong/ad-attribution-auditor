@@ -1,0 +1,41 @@
+{
+  "campaign_actions_present" : true,
+  "engine_confidence_intervals_verified" : [
+    "[1.2172, 1.4419]x",
+    "[3.7277, 4.1668]x",
+    "[0.3835, 0.6231]x",
+    "[-0.2400, 0.2684]x"
+  ],
+  "engine_roas_tokens_verified" : [
+    "4.8351x",
+    "1.3296x",
+    "5.0000x",
+    "3.9473x",
+    "3.0000x",
+    "0.5033x",
+    "8.0000x",
+    "0.0142x"
+  ],
+  "page_count" : 3,
+  "pages" : [
+    {
+      "extracted_characters" : 1342,
+      "page" : 1,
+      "sample_label_present" : true
+    },
+    {
+      "extracted_characters" : 1310,
+      "page" : 2,
+      "sample_label_present" : true
+    },
+    {
+      "extracted_characters" : 2024,
+      "page" : 3,
+      "sample_label_present" : true
+    }
+  ],
+  "parser" : "macOS PDFKit",
+  "preview_directory" : "\/tmp\/ad-auditor-v2-preview-2026-11-09",
+  "truth_not_substituted_for_engine_estimates" : true,
+  "v2_margin_and_classification_verified" : true
+}

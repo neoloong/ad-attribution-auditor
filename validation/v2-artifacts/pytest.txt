@@ -1,0 +1,33 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.16, pytest-9.2.0, pluggy-1.7.0
+rootdir: /Users/chao/dev/ad-attribution-auditor
+configfile: pytest.ini
+testpaths: tests
+plugins: cov-7.1.0, anyio-4.16.0
+collected 214 items
+
+tests/test_connectors/test_google_ads_connector.py ...........           [  5%]
+tests/test_connectors/test_meta_connector.py ..........                  [  9%]
+tests/test_connectors/test_shopify_connector.py ..........               [ 14%]
+tests/test_engine/test_aggregate_audit.py ...........                    [ 19%]
+tests/test_engine/test_campaign_regression.py ..............             [ 26%]
+tests/test_engine/test_cannibalization.py ...                            [ 27%]
+tests/test_engine/test_deduplication.py ...                              [ 28%]
+tests/test_engine/test_edge_cases.py ..........                          [ 33%]
+tests/test_engine/test_effect_labels.py ............                     [ 39%]
+tests/test_engine/test_health_checks.py ........                         [ 42%]
+tests/test_engine/test_incremental_roas.py .....                         [ 45%]
+tests/test_engine/test_organic_baseline.py ..............                [ 51%]
+tests/test_engine/test_organic_baseline_regression.py .................. [ 60%]
+.                                                                        [ 60%]
+tests/test_engine/test_period_comparison.py ....                         [ 62%]
+tests/test_engine/test_phase2_boundaries.py ...................          [ 71%]
+tests/test_engine/test_search_term_analysis.py .....                     [ 73%]
+tests/test_engine/test_user_level_audit.py ......                        [ 76%]
+tests/test_ingestion/test_loader.py ...                                  [ 78%]
+tests/test_ingestion/test_normalizer.py .........                        [ 82%]
+tests/test_ingestion/test_validators.py ......                           [ 85%]
+tests/test_integration/test_end_to_end.py ..............                 [ 91%]
+tests/test_report/test_sample_pdf.py ..................                  [100%]
+
+============================= 214 passed in 0.91s ==============================

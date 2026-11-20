@@ -1,0 +1,18 @@
+{
+  "registered_utc": "2026-11-09T08:32:58.698003+00:00",
+  "sha256": "870d3e2c50975b0a2b23e4c62b82a1a89c4c7b55ef86f904f0563067c54be337",
+  "engine": {
+    "ad_audit/engine/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ad_audit/engine/aggregate_audit.py": "c1953f9d7f6096a9b2532cea65c44871dace81aba136fc1bcd6f34a98784575f",
+    "ad_audit/engine/campaign_regression.py": "9198bad4b4955e04f779ba596cff36e88eb7970c1694dd874b2f6d43e73b15a6",
+    "ad_audit/engine/cannibalization.py": "4976375badd59f1fa0058c1831860049094c6bdf05dc66a38795b0d00c05dd3d",
+    "ad_audit/engine/deduplication.py": "da88ba2dd9ffac05ae4045e635738dc32dc132ce718e99336b58b8ee21e0d102",
+    "ad_audit/engine/health_checks.py": "463fa12d8f53d00fc6cfcd1f6df35f5fa4396aaf599d1e69b0c7e8d74c7f2f2a",
+    "ad_audit/engine/incremental_roas.py": "c1eb6965a6ebe5622e8ccb3b4efa966c513f101007b5a2eadd54824090dcd8b4",
+    "ad_audit/engine/models.py": "1a66cdc4c4fd2965d59d98eaad656fd81a5ea8a28c36367edd3035d4d11bfc9c",
+    "ad_audit/engine/organic_baseline_regression.py": "1965350e78f4c9d6299a1d9e111207d39d763215870658cc377d65d7ec2ff14b",
+    "ad_audit/engine/period_comparison.py": "96651f668055970276b88c1e3fb09fa4bf58e9c411d8016d58b0be609f64054b",
+    "ad_audit/engine/search_term_analysis.py": "d0c19742da8bffc307665e34a9fab407192555f991a80c39bc4a4a278d454340",
+    "ad_audit/engine/user_level_audit.py": "f41860a2fb6553b6298d58870dc58334dfc73825595e295dc59a2177ade317ac"
+  }
+}

@@ -1,0 +1,195 @@
+%PDF-1.4
+%ту╧╙
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 4582 >>
+stream
+0.04 0.39 0.4 rg 0 783 612 9 re f
+BT /F2 9 Tf 0.04 0.39 0.4 rg 1 0 0 1 42 753 Tm (AD ATTRIBUTION AUDITOR) Tj ET
+0.96 0.88 0.7 rg 338 746 232 23 re f
+BT /F2 10 Tf 0.1 0.17 0.25 rg 1 0 0 1 351 754 Tm (SAMPLE Ч synthetic data) Tj ET
+BT /F2 27 Tf 0.1 0.17 0.25 rg 1 0 0 1 42 700 Tm (Ad attribution audit) Tj ET
+BT /F1 10 Tf 0.38 0.43 0.48 rg 1 0 0 1 42 676 Tm (2026-08-01 to 2026-10-29  |  Meta + Google Ads  |  Shopify store) Tj ET
+0.8 0.84 0.87 rg 42 44.4 528 0.6 re f
+BT /F1 8 Tf 0.38 0.43 0.48 rg 1 0 0 1 42 36 Tm (Prepared 2026-11-09  |  Local synthetic demonstration) Tj ET
+BT /F1 8 Tf 0.38 0.43 0.48 rg 1 0 0 1 539 36 Tm (1 / 3) Tj ET
+0.94 0.96 0.97 rg 42 582 528 69 re f
+BT /F2 11 Tf 0.04 0.39 0.4 rg 1 0 0 1 56 629 Tm (SYNTHETIC QUALITY GATE: FAIL) Tj ET
+BT /F1 10 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 609 Tm (Joint campaign estimates with 95% confidence intervals. Suggested actions apply to) Tj ET
+BT /F1 10 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 594 Tm (this synthetic example; validate real budget changes with a holdout.) Tj ET
+BT /F2 8 Tf 0.38 0.43 0.48 rg 1 0 0 1 42 548 Tm (TOTAL AD SPEND) Tj ET
+BT /F2 25 Tf 0.1 0.17 0.25 rg 1 0 0 1 42 516 Tm ($65,500) Tj ET
+BT /F2 8 Tf 0.38 0.43 0.48 rg 1 0 0 1 220 548 Tm (PLATFORM ROAS) Tj ET
+BT /F2 25 Tf 0.1 0.17 0.25 rg 1 0 0 1 220 516 Tm (4.8351x) Tj ET
+BT /F2 8 Tf 0.38 0.43 0.48 rg 1 0 0 1 398 548 Tm (ESTIMATED STORE iROAS) Tj ET
+BT /F2 25 Tf 0.1 0.17 0.25 rg 1 0 0 1 398 516 Tm (1.3296x) Tj ET
+BT /F2 15 Tf 0.1 0.17 0.25 rg 1 0 0 1 42 476 Tm (Headline findings) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 453 Tm (Store 95% interval: [1.2172, 1.4419]x. Estimated incremental revenue is $87,086, versus) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 438 Tm ($316,700 claimed by platforms. Estimated iROAS is 72.50% below platform ROAS.) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 417 Tm (Practical-zero or negative evidence: none. Intervals crossing zero are inconclusive unless) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 402 Tm (inside +/-0.2x. Negative estimates and interval bounds are retained.) Tj ET
+BT /F2 15 Tf 0.1 0.17 0.25 rg 1 0 0 1 42 363 Tm (Reported versus estimated returns) Tj ET
+0.1 0.17 0.25 rg 42 312 528 36 re f
+BT /F2 9 Tf 1 1 1 rg 1 0 0 1 50 334 Tm (Scope) Tj ET
+BT /F2 9 Tf 1 1 1 rg 1 0 0 1 190 334 Tm (Spend) Tj ET
+BT /F2 9 Tf 1 1 1 rg 1 0 0 1 260 334 Tm (Platform) Tj ET
+BT /F2 9 Tf 1 1 1 rg 1 0 0 1 260 322 Tm (ROAS) Tj ET
+BT /F2 9 Tf 1 1 1 rg 1 0 0 1 332 334 Tm (Estimated) Tj ET
+BT /F2 9 Tf 1 1 1 rg 1 0 0 1 332 322 Tm (iROAS) Tj ET
+BT /F2 9 Tf 1 1 1 rg 1 0 0 1 404 334 Tm (95% confidence) Tj ET
+BT /F2 9 Tf 1 1 1 rg 1 0 0 1 404 322 Tm (interval) Tj ET
+0.94 0.96 0.97 rg 42 275 528 37 re f
+BT /F2 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 50 289 Tm (Combined store) Tj ET
+BT /F2 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 190 289 Tm ($65,500) Tj ET
+BT /F2 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 260 289 Tm (4.8351x) Tj ET
+BT /F2 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 332 289 Tm (1.3296x) Tj ET
+BT /F2 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 404 289 Tm ([1.2172, 1.4419]x) Tj ET
+1 1 1 rg 42 238 528 37 re f
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 50 252 Tm (Meta Prospecting) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 190 252 Tm ($18,100) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 260 252 Tm (5.0000x) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 332 252 Tm (3.9473x) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 404 252 Tm ([3.7277, 4.1668]x) Tj ET
+0.94 0.96 0.97 rg 42 201 528 37 re f
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 50 215 Tm (Google Generic) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 190 215 Tm ($30,600) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 260 215 Tm (3.0000x) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 332 215 Tm (0.5033x) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 404 215 Tm ([0.3835, 0.6231]x) Tj ET
+1 1 1 rg 42 164 528 37 re f
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 50 178 Tm (Google Brand) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 190 178 Tm ($16,800) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 260 178 Tm (8.0000x) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 332 178 Tm (0.0142x) Tj ET
+BT /F1 8.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 404 178 Tm ([-0.2400, 0.2684]x) Tj ET
+BT /F1 9 Tf 0.38 0.43 0.48 rg 1 0 0 1 42 145 Tm (All campaign effects come from one daily revenue regression. Campaign contributions sum to the store) Tj ET
+BT /F1 9 Tf 0.38 0.43 0.48 rg 1 0 0 1 42 132 Tm (estimate. Intervals are marginal 95% HC3 intervals, conditional on observed spend, and do not) Tj ET
+BT /F1 9 Tf 0.38 0.43 0.48 rg 1 0 0 1 42 119 Tm (establish real-world causality.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 3283 >>
+stream
+0.04 0.39 0.4 rg 0 783 612 9 re f
+BT /F2 9 Tf 0.04 0.39 0.4 rg 1 0 0 1 42 753 Tm (AD ATTRIBUTION AUDITOR) Tj ET
+0.96 0.88 0.7 rg 338 746 232 23 re f
+BT /F2 10 Tf 0.1 0.17 0.25 rg 1 0 0 1 351 754 Tm (SAMPLE Ч synthetic data) Tj ET
+BT /F2 27 Tf 0.1 0.17 0.25 rg 1 0 0 1 42 700 Tm (Campaign action list) Tj ET
+BT /F1 10 Tf 0.38 0.43 0.48 rg 1 0 0 1 42 676 Tm (SCALE / KILL / KEEP  |  Decisions use interval bounds, not platform claims) Tj ET
+0.8 0.84 0.87 rg 42 44.4 528 0.6 re f
+BT /F1 8 Tf 0.38 0.43 0.48 rg 1 0 0 1 42 36 Tm (Prepared 2026-11-09  |  Local synthetic demonstration) Tj ET
+BT /F1 8 Tf 0.38 0.43 0.48 rg 1 0 0 1 539 36 Tm (2 / 3) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 647 Tm (Assumed contribution margin: 40%. Break-even iROAS = 1/margin = 2.50x. SCALE if the) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 632 Tm (entire 95% CI exceeds this threshold; KILL if below; KEEP otherwise. Customer margin) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 617 Tm (unknown: revenue-iROAS priorities, not profit decisions.) Tj ET
+0.94 0.96 0.97 rg 42 434 528 133 re f
+BT /F2 15 Tf 0.1 0.17 0.25 rg 1 0 0 1 56 542 Tm (Meta Prospecting) Tj ET
+0.04 0.39 0.4 rg 440 533 114 24 re f
+BT /F2 10 Tf 1 1 1 rg 1 0 0 1 451 541 Tm (KEEP Ч hold) Tj ET
+BT /F1 9 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 518 Tm (Platform 5.0000x  |  Estimate 3.9473x  |  95% CI [3.7277, 4.1668]x) Tj ET
+BT /F1 9 Tf 0.38 0.43 0.48 rg 1 0 0 1 56 499 Tm (Evidence label: positive \(practical region +/-0.2x\).) Tj ET
+BT /F1 10 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 475 Tm (Validation hold. Provisional priority: SCALE. Entire 95% interval exceeds the 2.50x) Tj ET
+BT /F1 10 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 461 Tm (margin threshold.) Tj ET
+0.94 0.96 0.97 rg 42 284 528 133 re f
+BT /F2 15 Tf 0.1 0.17 0.25 rg 1 0 0 1 56 392 Tm (Google Generic) Tj ET
+0.04 0.39 0.4 rg 440 383 114 24 re f
+BT /F2 10 Tf 1 1 1 rg 1 0 0 1 451 391 Tm (KEEP Ч hold) Tj ET
+BT /F1 9 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 368 Tm (Platform 3.0000x  |  Estimate 0.5033x  |  95% CI [0.3835, 0.6231]x) Tj ET
+BT /F1 9 Tf 0.38 0.43 0.48 rg 1 0 0 1 56 349 Tm (Evidence label: positive \(practical region +/-0.2x\).) Tj ET
+BT /F1 10 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 325 Tm (Validation hold. Provisional priority: KILL. Entire 95% interval is below the 2.50x) Tj ET
+BT /F1 10 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 311 Tm (margin threshold.) Tj ET
+0.94 0.96 0.97 rg 42 134 528 133 re f
+BT /F2 15 Tf 0.1 0.17 0.25 rg 1 0 0 1 56 242 Tm (Google Brand) Tj ET
+0.04 0.39 0.4 rg 440 233 114 24 re f
+BT /F2 10 Tf 1 1 1 rg 1 0 0 1 451 241 Tm (KEEP Ч hold) Tj ET
+BT /F1 9 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 218 Tm (Platform 8.0000x  |  Estimate 0.0142x  |  95% CI [-0.2400, 0.2684]x) Tj ET
+BT /F1 9 Tf 0.38 0.43 0.48 rg 1 0 0 1 56 199 Tm (Evidence label: inconclusive \(practical region +/-0.2x\).) Tj ET
+BT /F1 10 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 175 Tm (Validation hold. Provisional priority: KILL. Entire 95% interval is below the 2.50x) Tj ET
+BT /F1 10 Tf 0.17 0.22 0.28 rg 1 0 0 1 56 161 Tm (margin threshold.) Tj ET
+BT /F2 10 Tf 0.04 0.39 0.4 rg 1 0 0 1 42 87 Tm (Before real-world action: verify contribution margin and run a controlled holdout or) Tj ET
+BT /F2 10 Tf 0.04 0.39 0.4 rg 1 0 0 1 42 73 Tm (staged budget experiment. No campaign changes were executed.) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 4053 >>
+stream
+0.04 0.39 0.4 rg 0 783 612 9 re f
+BT /F2 9 Tf 0.04 0.39 0.4 rg 1 0 0 1 42 753 Tm (AD ATTRIBUTION AUDITOR) Tj ET
+0.96 0.88 0.7 rg 338 746 232 23 re f
+BT /F2 10 Tf 0.1 0.17 0.25 rg 1 0 0 1 351 754 Tm (SAMPLE Ч synthetic data) Tj ET
+BT /F2 27 Tf 0.1 0.17 0.25 rg 1 0 0 1 42 700 Tm (Methodology & limitations) Tj ET
+BT /F1 10 Tf 0.38 0.43 0.48 rg 1 0 0 1 42 676 Tm (Aggregate daily analysis  |  Revenue return, not contribution profit) Tj ET
+0.8 0.84 0.87 rg 42 44.4 528 0.6 re f
+BT /F1 8 Tf 0.38 0.43 0.48 rg 1 0 0 1 42 36 Tm (Prepared 2026-11-09  |  Local synthetic demonstration) Tj ET
+BT /F1 8 Tf 0.38 0.43 0.48 rg 1 0 0 1 539 36 Tm (3 / 3) Tj ET
+BT /F2 15 Tf 0.1 0.17 0.25 rg 1 0 0 1 42 635 Tm (How the engine produced these figures) Tj ET
+BT /F2 11 Tf 0.04 0.39 0.4 rg 1 0 0 1 42 607 Tm (Inputs and model) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 586 Tm (One joint OLS model uses 90 daily Shopify revenue observations, an intercept, each) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 571 Tm (campaign's daily spend, day-of-week indicators, and a normalized elapsed-day trend.) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 556 Tm (Revenue dollars per spend dollar give campaign iROAS directly. Platform claims and) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 541 Tm (order UTMs do not supply causal labels. GSC is used only for overlap diagnostics.) Tj ET
+BT /F2 11 Tf 0.04 0.39 0.4 rg 1 0 0 1 42 508 Tm (Calendar controls and baseline) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 487 Tm (The campaign model uses weekly effects and linear trend; short-window month effects are) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 472 Tm (excluded. Organic demand is the model prediction with all campaign spend set to zero on) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 457 Tm (each observed date. Separate effects require enough independent spend variation.) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 442 Tm (Unidentified campaigns return no point estimate or interval.) Tj ET
+BT /F2 11 Tf 0.04 0.39 0.4 rg 1 0 0 1 42 409 Tm (Uncertainty and signed estimates) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 388 Tm (Two-sided 95% intervals use HC3 heteroskedasticity-robust OLS standard errors and) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 373 Tm (Student t\(n-p\) critical values. Combined uncertainty includes cross-campaign covariance.) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 358 Tm (Negative effects and bounds remain negative. Evidence labels are positive, negative,) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 343 Tm (practically zero \(CI inside +/-0.2x\), inconclusive, or unavailable.) Tj ET
+BT /F2 11 Tf 0.04 0.39 0.4 rg 1 0 0 1 42 310 Tm (Causal and financial limitations) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 289 Tm (HC3 does not correct serial correlation or endogenous spend. Promotions, omitted) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 274 Tm (channels, nonlinear seasonality, carryover, saturation and interactions can bias) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 259 Tm (estimates. Missing campaign-date rows are treated as zero spend; missing interior) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 244 Tm (Shopify days disable campaign inference. Contribution margin 40% implies break-even) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 229 Tm (iROAS 2.50x.) Tj ET
+BT /F2 11 Tf 0.04 0.39 0.4 rg 1 0 0 1 42 196 Tm (Validation scope) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 175 Tm (Validation v2 supersedes the five-seed Gate-1 PASS. Calibration and stress results are) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 160 Tm (in validation/v2-calibration-2026-11-09.md. These displayed estimates use the original) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 145 Tm (synthetic fixture; they do not establish calibration with endogenous spend, serial) Tj ET
+BT /F1 10.5 Tf 0.17 0.22 0.28 rg 1 0 0 1 42 130 Tm (correlation or carryover. Validate material budget changes with a controlled holdout.) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Title (SAMPLE - Synthetic Ad Attribution Audit) /Author (Ad Attribution Auditor) >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000133 00000 n 
+0000000230 00000 n 
+0000000332 00000 n 
+0000000468 00000 n 
+0000005101 00000 n 
+0000005237 00000 n 
+0000008571 00000 n 
+0000008708 00000 n 
+0000012813 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R /Info 11 0 R >>
+startxref
+12917
+%%EOF

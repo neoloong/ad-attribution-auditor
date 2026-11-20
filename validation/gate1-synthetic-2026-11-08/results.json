@@ -1,0 +1,597 @@
+{
+  "gate": "FAIL",
+  "dataset": {
+    "seed": 20261108,
+    "days": 90,
+    "start": "2026-08-01",
+    "end": "2026-10-29",
+    "aov": 100,
+    "orders": 5797,
+    "organic_orders": 4920,
+    "organic_daily_mean": 54.666666666666664,
+    "campaigns": [
+      {
+        "name": "Meta Prospecting",
+        "platform": "meta",
+        "class": "HIGH",
+        "true_roas": 4.0,
+        "spend_unit": 100,
+        "claimed_roas": 5.0
+      },
+      {
+        "name": "Google Generic",
+        "platform": "google_ads",
+        "class": "LOW",
+        "true_roas": 0.5,
+        "spend_unit": 200,
+        "claimed_roas": 3.0
+      },
+      {
+        "name": "Google Brand",
+        "platform": "google_ads",
+        "class": "ZERO",
+        "true_roas": 0.0,
+        "spend_unit": 100,
+        "claimed_roas": 8.0
+      }
+    ],
+    "common_zero_spend_days": 7
+  },
+  "input_validation": {
+    "meta_ads": {
+      "rows": 90,
+      "valid": true,
+      "missing_required": [],
+      "missing_optional": [],
+      "extra_columns": []
+    },
+    "google_ads": {
+      "rows": 180,
+      "valid": true,
+      "missing_required": [],
+      "missing_optional": [],
+      "extra_columns": []
+    },
+    "shopify_orders": {
+      "rows": 5797,
+      "valid": true,
+      "missing_required": [],
+      "missing_optional": [],
+      "extra_columns": []
+    },
+    "gsc_brand_search": {
+      "rows": 90,
+      "valid": true,
+      "missing_required": [],
+      "missing_optional": [],
+      "extra_columns": []
+    }
+  },
+  "tests": {
+    "exit_code": 0,
+    "summary": "170 passed in 0.58s"
+  },
+  "environment": {
+    "python": "3.12.16",
+    "git_head": "9bf3954f58cbbf4a188e1ca48ac6893724674c3f",
+    "packages": {
+      "numpy": "1.26.4",
+      "pandas": "2.3.3",
+      "scipy": "1.17.1",
+      "pytest": "9.2.0"
+    }
+  },
+  "config": {
+    "mode": "aggregate",
+    "attribution_window_days": 7,
+    "cannibalization_lookback_hours": 24,
+    "spend_on_threshold": 5.0,
+    "correlation_window_days": 7,
+    "rolling_avg_days": 30
+  },
+  "combined": {
+    "summary": {
+      "mode": "aggregate",
+      "reported_roas": 4.8351,
+      "true_incremental_roas": 1.4305,
+      "inflation_rate": 0.7041,
+      "duplication_rate": 0.0,
+      "cannibalization_score": 0.4819,
+      "organic_baseline_conversions": 54.0,
+      "incremental_conversions_per_day": 11.289156626506028,
+      "correlation_mean": 0.48681905766077616,
+      "total_matched_orders": 0,
+      "truly_incremental_orders": 0,
+      "cannibalized_orders": 0
+    },
+    "incremental_roas": {
+      "reported_roas": 4.8351,
+      "true_incremental_roas": 1.4305,
+      "inflation_rate": 0.7041,
+      "total_spend": 65500.0,
+      "reported_revenue": 316700.0,
+      "incremental_revenue": 93700.0
+    },
+    "deduplication": {
+      "platform_reported_conversions": 3167,
+      "actual_conversions": 5797,
+      "overlap_count": 3167,
+      "duplication_rate": 0.0
+    },
+    "cannibalization": {
+      "cannibalized_days": 40,
+      "total_days": 83,
+      "cannibalization_score": 0.4819,
+      "cannibalized_revenue_fraction": 0.4875
+    },
+    "baseline": {
+      "baseline_daily": 54.0,
+      "method": "timeseries_interruption",
+      "r_squared": 0.0,
+      "ad_marginal_effect": 0.0,
+      "n_obs": 7,
+      "warnings": [
+        "Time-series interruption detected: 7-day spend-off streak used"
+      ],
+      "model_summary": ""
+    },
+    "ols_attempt": {
+      "baseline_daily": 0.0,
+      "method": "none",
+      "r_squared": 0.0,
+      "ad_marginal_effect": 0.0,
+      "n_obs": 0,
+      "warnings": [
+        "Poor model fit: R\u00b2 = -3.4832 < 0.01"
+      ],
+      "model_summary": ""
+    },
+    "alerts": [
+      {
+        "severity": "critical",
+        "title": "Severe ROAS Inflation",
+        "message": "Reported ROAS (4.84x) is inflated by 70% versus true incremental ROAS (1.43x). Ad spend may not be generating real returns.",
+        "metric": "inflation_rate",
+        "value": 0.7041,
+        "threshold": 0.6
+      },
+      {
+        "severity": "critical",
+        "title": "High Cannibalization",
+        "message": "Cannibalization score is 48% \u2014 on 48% of spend-on days, ad platform claims overlap with organic brand search. A large share of 'conversions' may be users who would have purchased anyway.",
+        "metric": "cannibalization_score",
+        "value": 0.4819,
+        "threshold": 0.4
+      }
+    ],
+    "confidence_interval": null,
+    "campaign_attribution_supported": false,
+    "explicit_non_incremental_flag": false,
+    "output_schema": {
+      "AuditResult": [
+        "mode",
+        "config",
+        "deduplication",
+        "cannibalization",
+        "incremental_roas",
+        "correlation_mean",
+        "organic_baseline_conversions",
+        "incremental_conversions_per_day",
+        "daily_df",
+        "total_matched_orders",
+        "truly_incremental_orders",
+        "cannibalized_orders",
+        "user_match_df",
+        "extras"
+      ],
+      "IncrementalROASResult": [
+        "reported_roas",
+        "true_incremental_roas",
+        "inflation_rate",
+        "total_spend",
+        "reported_revenue",
+        "incremental_revenue"
+      ],
+      "extras": {}
+    },
+    "spend_on_days": 83,
+    "zero_spend_days": 7,
+    "ground_truth_roas": 1.3389312977099237,
+    "absolute_error": 0.09156870229007641
+  },
+  "campaign_diagnostics": [
+    {
+      "summary": {
+        "mode": "aggregate",
+        "reported_roas": 5.0,
+        "true_incremental_roas": 4.7956,
+        "inflation_rate": 0.0409,
+        "duplication_rate": 0.0,
+        "cannibalization_score": 0.3788,
+        "organic_baseline_conversions": 54.0,
+        "incremental_conversions_per_day": 13.151515151515156,
+        "correlation_mean": 0.772949103989593,
+        "total_matched_orders": 0,
+        "truly_incremental_orders": 0,
+        "cannibalized_orders": 0
+      },
+      "incremental_roas": {
+        "reported_roas": 5.0,
+        "true_incremental_roas": 4.7956,
+        "inflation_rate": 0.0409,
+        "total_spend": 18100.0,
+        "reported_revenue": 90500.0,
+        "incremental_revenue": 86800.0
+      },
+      "deduplication": {
+        "platform_reported_conversions": 905,
+        "actual_conversions": 5797,
+        "overlap_count": 905,
+        "duplication_rate": 0.0
+      },
+      "cannibalization": {
+        "cannibalized_days": 25,
+        "total_days": 66,
+        "cannibalization_score": 0.3788,
+        "cannibalized_revenue_fraction": 0.3944
+      },
+      "baseline": {
+        "baseline_daily": 54.0,
+        "method": "timeseries_interruption",
+        "r_squared": 0.0,
+        "ad_marginal_effect": 0.0,
+        "n_obs": 7,
+        "warnings": [
+          "Time-series interruption detected: 7-day spend-off streak used"
+        ],
+        "model_summary": ""
+      },
+      "ols_attempt": {
+        "baseline_daily": 0.0,
+        "method": "none",
+        "r_squared": 0.0,
+        "ad_marginal_effect": 0.0,
+        "n_obs": 0,
+        "warnings": [
+          "Poor model fit: R\u00b2 = -3.5215 < 0.01"
+        ],
+        "model_summary": ""
+      },
+      "alerts": [
+        {
+          "severity": "warning",
+          "title": "Elevated Cannibalization",
+          "message": "Cannibalization score is 38% \u2014 ad platforms may be claiming credit for organic purchases.",
+          "metric": "cannibalization_score",
+          "value": 0.3788,
+          "threshold": 0.2
+        }
+      ],
+      "confidence_interval": null,
+      "campaign_attribution_supported": false,
+      "explicit_non_incremental_flag": false,
+      "output_schema": {
+        "AuditResult": [
+          "mode",
+          "config",
+          "deduplication",
+          "cannibalization",
+          "incremental_roas",
+          "correlation_mean",
+          "organic_baseline_conversions",
+          "incremental_conversions_per_day",
+          "daily_df",
+          "total_matched_orders",
+          "truly_incremental_orders",
+          "cannibalized_orders",
+          "user_match_df",
+          "extras"
+        ],
+        "IncrementalROASResult": [
+          "reported_roas",
+          "true_incremental_roas",
+          "inflation_rate",
+          "total_spend",
+          "reported_revenue",
+          "incremental_revenue"
+        ],
+        "extras": {}
+      },
+      "spend_on_days": 66,
+      "zero_spend_days": 24,
+      "campaign": "Meta Prospecting",
+      "class": "HIGH",
+      "platform": "meta",
+      "ground_truth": {
+        "roas": 4.0,
+        "incremental_revenue": 72400,
+        "incremental_orders": 724,
+        "reported_conversions": 905,
+        "spend": 18100.0
+      },
+      "absolute_error": 0.7956000000000003,
+      "relative_error": 0.19890000000000008,
+      "tolerance": 0.8,
+      "point_check_pass": true,
+      "ci_covers_truth": null,
+      "non_incremental_signal": false,
+      "action": "KEEP",
+      "action_reason": "Validation hold; do not scale or kill from an unvalidated estimate.",
+      "gate_pass": false
+    },
+    {
+      "summary": {
+        "mode": "aggregate",
+        "reported_roas": 3.0,
+        "true_incremental_roas": 2.585,
+        "inflation_rate": 0.1383,
+        "duplication_rate": 0.0,
+        "cannibalization_score": 0.4154,
+        "organic_baseline_conversions": 54.0,
+        "incremental_conversions_per_day": 12.169230769230765,
+        "correlation_mean": 0.18520914573606956,
+        "total_matched_orders": 0,
+        "truly_incremental_orders": 0,
+        "cannibalized_orders": 0
+      },
+      "incremental_roas": {
+        "reported_roas": 3.0,
+        "true_incremental_roas": 2.585,
+        "inflation_rate": 0.1383,
+        "total_spend": 30600.0,
+        "reported_revenue": 91800.0,
+        "incremental_revenue": 79100.0
+      },
+      "deduplication": {
+        "platform_reported_conversions": 918,
+        "actual_conversions": 5797,
+        "overlap_count": 918,
+        "duplication_rate": 0.0
+      },
+      "cannibalization": {
+        "cannibalized_days": 27,
+        "total_days": 65,
+        "cannibalization_score": 0.4154,
+        "cannibalized_revenue_fraction": 0.4169
+      },
+      "baseline": {
+        "baseline_daily": 54.0,
+        "method": "timeseries_interruption",
+        "r_squared": 0.0,
+        "ad_marginal_effect": 0.0,
+        "n_obs": 7,
+        "warnings": [
+          "Time-series interruption detected: 7-day spend-off streak used"
+        ],
+        "model_summary": ""
+      },
+      "ols_attempt": {
+        "baseline_daily": 0.0,
+        "method": "none",
+        "r_squared": 0.0,
+        "ad_marginal_effect": 0.0,
+        "n_obs": 0,
+        "warnings": [
+          "Poor model fit: R\u00b2 = -4.6867 < 0.01"
+        ],
+        "model_summary": ""
+      },
+      "alerts": [
+        {
+          "severity": "critical",
+          "title": "High Cannibalization",
+          "message": "Cannibalization score is 42% \u2014 on 42% of spend-on days, ad platform claims overlap with organic brand search. A large share of 'conversions' may be users who would have purchased anyway.",
+          "metric": "cannibalization_score",
+          "value": 0.4154,
+          "threshold": 0.4
+        },
+        {
+          "severity": "warning",
+          "title": "Weak Spend-Conversion Correlation",
+          "message": "Spend-conversion correlation is only 0.19. Ad spend has a weak relationship with actual sales.",
+          "metric": "correlation_mean",
+          "value": 0.18520914573606956,
+          "threshold": 0.3
+        }
+      ],
+      "confidence_interval": null,
+      "campaign_attribution_supported": false,
+      "explicit_non_incremental_flag": false,
+      "output_schema": {
+        "AuditResult": [
+          "mode",
+          "config",
+          "deduplication",
+          "cannibalization",
+          "incremental_roas",
+          "correlation_mean",
+          "organic_baseline_conversions",
+          "incremental_conversions_per_day",
+          "daily_df",
+          "total_matched_orders",
+          "truly_incremental_orders",
+          "cannibalized_orders",
+          "user_match_df",
+          "extras"
+        ],
+        "IncrementalROASResult": [
+          "reported_roas",
+          "true_incremental_roas",
+          "inflation_rate",
+          "total_spend",
+          "reported_revenue",
+          "incremental_revenue"
+        ],
+        "extras": {}
+      },
+      "spend_on_days": 65,
+      "zero_spend_days": 25,
+      "campaign": "Google Generic",
+      "class": "LOW",
+      "platform": "google_ads",
+      "ground_truth": {
+        "roas": 0.5,
+        "incremental_revenue": 15300,
+        "incremental_orders": 153,
+        "reported_conversions": 918,
+        "spend": 30600.0
+      },
+      "absolute_error": 2.085,
+      "relative_error": 4.17,
+      "tolerance": 0.1,
+      "point_check_pass": false,
+      "ci_covers_truth": null,
+      "non_incremental_signal": false,
+      "action": "KEEP",
+      "action_reason": "Validation hold; do not scale or kill from an unvalidated estimate.",
+      "gate_pass": false
+    },
+    {
+      "summary": {
+        "mode": "aggregate",
+        "reported_roas": 8.0,
+        "true_incremental_roas": 3.7202,
+        "inflation_rate": 0.535,
+        "duplication_rate": 0.0,
+        "cannibalization_score": 0.6212,
+        "organic_baseline_conversions": 55.5,
+        "incremental_conversions_per_day": 9.469696969696969,
+        "correlation_mean": -0.1300813327315286,
+        "total_matched_orders": 0,
+        "truly_incremental_orders": 0,
+        "cannibalized_orders": 0
+      },
+      "incremental_roas": {
+        "reported_roas": 8.0,
+        "true_incremental_roas": 3.7202,
+        "inflation_rate": 0.535,
+        "total_spend": 16800.0,
+        "reported_revenue": 134400.0,
+        "incremental_revenue": 62500.0
+      },
+      "deduplication": {
+        "platform_reported_conversions": 1344,
+        "actual_conversions": 5797,
+        "overlap_count": 1344,
+        "duplication_rate": 0.0
+      },
+      "cannibalization": {
+        "cannibalized_days": 41,
+        "total_days": 66,
+        "cannibalization_score": 0.6212,
+        "cannibalized_revenue_fraction": 0.6194
+      },
+      "baseline": {
+        "baseline_daily": 55.5,
+        "method": "timeseries_interruption",
+        "r_squared": 0.0,
+        "ad_marginal_effect": 0.0,
+        "n_obs": 8,
+        "warnings": [
+          "Time-series interruption detected: 8-day spend-off streak used"
+        ],
+        "model_summary": ""
+      },
+      "ols_attempt": {
+        "baseline_daily": 0.0,
+        "method": "none",
+        "r_squared": 0.0,
+        "ad_marginal_effect": 0.0,
+        "n_obs": 0,
+        "warnings": [
+          "Poor model fit: R\u00b2 = -4.9072 < 0.01"
+        ],
+        "model_summary": ""
+      },
+      "alerts": [
+        {
+          "severity": "critical",
+          "title": "High Cannibalization",
+          "message": "Cannibalization score is 62% \u2014 on 62% of spend-on days, ad platform claims overlap with organic brand search. A large share of 'conversions' may be users who would have purchased anyway.",
+          "metric": "cannibalization_score",
+          "value": 0.6212,
+          "threshold": 0.4
+        },
+        {
+          "severity": "critical",
+          "title": "Negative Spend-Conversion Correlation",
+          "message": "Spend and conversions are negatively correlated (-0.13). Increasing ad spend may not be driving more actual sales.",
+          "metric": "correlation_mean",
+          "value": -0.1300813327315286,
+          "threshold": 0.0
+        },
+        {
+          "severity": "warning",
+          "title": "ROAS Inflation Detected",
+          "message": "Reported ROAS is inflated by 54%. True incremental ROAS is 3.72x.",
+          "metric": "inflation_rate",
+          "value": 0.535,
+          "threshold": 0.3
+        }
+      ],
+      "confidence_interval": null,
+      "campaign_attribution_supported": false,
+      "explicit_non_incremental_flag": false,
+      "output_schema": {
+        "AuditResult": [
+          "mode",
+          "config",
+          "deduplication",
+          "cannibalization",
+          "incremental_roas",
+          "correlation_mean",
+          "organic_baseline_conversions",
+          "incremental_conversions_per_day",
+          "daily_df",
+          "total_matched_orders",
+          "truly_incremental_orders",
+          "cannibalized_orders",
+          "user_match_df",
+          "extras"
+        ],
+        "IncrementalROASResult": [
+          "reported_roas",
+          "true_incremental_roas",
+          "inflation_rate",
+          "total_spend",
+          "reported_revenue",
+          "incremental_revenue"
+        ],
+        "extras": {}
+      },
+      "spend_on_days": 66,
+      "zero_spend_days": 24,
+      "campaign": "Google Brand",
+      "class": "ZERO",
+      "platform": "google_ads",
+      "ground_truth": {
+        "roas": 0.0,
+        "incremental_revenue": 0,
+        "incremental_orders": 0,
+        "reported_conversions": 1344,
+        "spend": 16800.0
+      },
+      "absolute_error": 3.7202,
+      "relative_error": null,
+      "tolerance": 0.1,
+      "point_check_pass": false,
+      "ci_covers_truth": null,
+      "non_incremental_signal": false,
+      "action": "KEEP",
+      "action_reason": "Validation hold; do not scale or kill from an unvalidated estimate.",
+      "gate_pass": false
+    }
+  ],
+  "input_sha256": {
+    "daily_combined.csv": "99361554213c6fd1fd5cd45c9e0152853e3cadd61bba3de19c3179f5518fafb7",
+    "daily_google_brand.csv": "289aaa1297bfb1f56f9a8efe2e747f4ec2f85d401185b5d8f64f777ed73b379a",
+    "daily_google_generic.csv": "7b58dbac9590a4fb6d11c3b226c1bd159a699c5f6f08edc5d80fbed3f395e1d6",
+    "daily_meta_prospecting.csv": "c979019c7c299f22edf2e1a67df72f80a6b60b0db0f2b089c9830501734863b6",
+    "google_ads.csv": "38577495617a5489f0d1129560a913eb2b1f5cf66ad622b45645bdf2cc0f4208",
+    "ground_truth_daily.csv": "f3a930eb3196763f1d35b471d02030b09d127895d9461547cf4f3432700736dc",
+    "ground_truth_orders.csv": "8256db3add0d11958d6e8bc2e0a3a2f472f578a33ecfbbedae483e6338356a4a",
+    "gsc_brand_search.csv": "4648b32cab00df73d5299338e793b3f6df6a1d2be9343a2f24814d77f239b132",
+    "meta_ads.csv": "da04d2f9d463e10fa0923cb22fee9e5a31903995c8e8d897c5651e1df71a766e",
+    "shopify_orders.csv": "aa4ce10e0e1104e9d7d00a5ecfc29cfbdc8b529d140c18e16884f7edf84e0d92"
+  }
+}

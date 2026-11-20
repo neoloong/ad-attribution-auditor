@@ -1,0 +1,55 @@
+S1: 500/4000
+S1: 1000/4000
+S1: 1500/4000
+S1: 2000/4000
+S1: 2500/4000
+S1: 3000/4000
+S1: 3500/4000
+S1: 4000/4000
+S2: 500/4000
+S2: 1000/4000
+S2: 1500/4000
+S2: 2000/4000
+S2: 2500/4000
+S2: 3000/4000
+S2: 3500/4000
+S2: 4000/4000
+S3: 500/4000
+S3: 1000/4000
+S3: 1500/4000
+S3: 2000/4000
+S3: 2500/4000
+S3: 3000/4000
+S3: 3500/4000
+S3: 4000/4000
+S4: 500/4000
+S4: 1000/4000
+S4: 1500/4000
+S4: 2000/4000
+S4: 2500/4000
+S4: 3000/4000
+S4: 3500/4000
+S4: 4000/4000
+S5: 500/4000
+S5: 1000/4000
+S5: 1500/4000
+S5: 2000/4000
+S5: 2500/4000
+S5: 3000/4000
+S5: 3500/4000
+S5: 4000/4000
+S6: 500/4000
+S6: 1000/4000
+S6: 1500/4000
+S6: 2000/4000
+S6: 2500/4000
+S6: 3000/4000
+S6: 3500/4000
+S6: 4000/4000
+S1 FAIL Meta Prospecting:coverage=96.75%,bias/SE=0.115; Google Generic:coverage=95.50%,bias/SE=0.144; Google Brand:coverage=96.23%,bias/SE=0.122
+S2 PASS Meta Prospecting:coverage=96.33%,bias/SE=0.032; Google Generic:coverage=96.35%,bias/SE=0.017; Google Brand:coverage=96.05%,bias/SE=0.015
+S3 PASS Meta Prospecting:coverage=91.35%,bias/SE=0.018; Google Generic:coverage=92.00%,bias/SE=0.033; Google Brand:coverage=90.85%,bias/SE=0.005
+S4 FAIL Meta Prospecting:coverage=92.10%,bias/SE=0.621; Google Generic:coverage=91.83%,bias/SE=0.659; Google Brand:coverage=0.05%,bias/SE=5.253
+S5 FAIL Meta Prospecting:coverage=44.82%,bias/SE=2.100; Google Generic:coverage=95.78%,bias/SE=0.192; Google Brand:coverage=96.00%,bias/SE=0.185
+S6 PASS Meta Prospecting:coverage=96.60%,bias/SE=0.010; Google Generic:coverage=95.67%,bias/SE=0.022; Google Brand:coverage=96.58%,bias/SE=0.037
+Inference swap: NO. Spec gap and corrected sample PDF saved.
