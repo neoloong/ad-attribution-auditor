@@ -277,12 +277,11 @@ def test_rolling_correlation_with_nan():
 def test_compute_baseline_from_coeffs_trend_only():
     """Unit test for baseline computation with only intercept + trend."""
     beta = np.array([100.0, 0.5])  # alpha=100, trend=0.5
-    names = ["const", "trend"]  # won't actually appear from _build_features but tests the pure function
+    names = ["const", "trend"]  # isolate the normalized trend contribution
     # Use internal function directly
     baseline = _compute_baseline_from_coeffs(beta=beta, feature_names=names, n=100)
     # With normalised trend at 0.5 midpoint: baseline = 100 + 0.5*0.5 = 100.25
-    # (But if const isn't in names it gets 0 for avg_dow/avg_month effects)
-    assert baseline >= 100.0
+    assert baseline == pytest.approx(100.25)
 
 
 # ---------------------------------------------------------------------------

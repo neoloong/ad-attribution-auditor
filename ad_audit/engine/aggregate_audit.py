@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from ad_audit.engine.campaign_regression import attach_campaign_spend, estimate_campaign_incrementality
 from ad_audit.engine.models import AuditConfig, AuditMode, AuditResult
 from ad_audit.engine.deduplication import compute_deduplication
 from ad_audit.engine.cannibalization import compute_cannibalization
@@ -25,7 +26,11 @@ def run_aggregate_audit(
     ad_df : pre-concatenated ad platform DataFrame (columns: date, spend,
         reported_conversions, reported_revenue, platform).  May contain rows
         from Meta, Google Ads, or both.
-    shopify_df : normalized Shopify/e-commerce orders DataFrame (columns: date, revenue, ...)
+    shopify_df : normalized Shopify input. Either order-level rows from
+        ``normalize_shopify_orders`` (columns: order_id, date, revenue, ...;
+        one row per order) or a daily panel from ``normalize_shopify_daily``
+        (columns: date, orders, revenue, currency; one row per day, where
+        orders=0/revenue=0 rows are real observations).
     gsc_df : normalized GSC DataFrame (columns: date, clicks, impressions).
         Optional — cannibalization scoring is skipped when *None* or empty.
     config : audit configuration; defaults used if *None*
@@ -49,7 +54,15 @@ def run_aggregate_audit(
     # Sub-analyses
     dedup = compute_deduplication(daily)
     cannibal = compute_cannibalization(daily, config)
-    iroas = compute_incremental_roas(daily, organic_baseline, config)
+    campaign_model = estimate_campaign_incrementality(daily)
+    iroas = campaign_model.combined
+    if iroas is None:
+        # Compatibility for short/unidentified panels. No campaign point is
+        # produced; the legacy store heuristic is explicitly uncalibrated.
+        iroas = compute_incremental_roas(daily, organic_baseline, config)
+    else:
+        organic_baseline = campaign_model.organic_orders_daily
+        incremental_per_day = campaign_model.incremental_orders_daily
 
     return AuditResult(
         mode=AuditMode.AGGREGATE,
@@ -61,6 +74,11 @@ def run_aggregate_audit(
         organic_baseline_conversions=organic_baseline,
         incremental_conversions_per_day=incremental_per_day,
         daily_df=daily,
+        campaign_results=campaign_model.campaigns,
+        extras={"campaign_model": campaign_model.diagnostics,
+                "data_quality_warnings": daily.attrs.get("data_quality_warnings", []),
+                "data_quality_notes": daily.attrs.get("data_quality_notes", []),
+                "shopify_granularity": daily.attrs.get("shopify_granularity", "orders")},
     )
 
 
@@ -84,14 +102,18 @@ def _build_daily_merged(
     )
 
     # Shopify daily aggregation
-    shopify_daily = (
-        shopify_df.groupby("date")
-        .agg(
-            actual_conversions=("revenue", "count"),
-            actual_revenue=("revenue", "sum"),
+    daily_input = is_shopify_daily_panel(shopify_df)
+    if daily_input:
+        shopify_daily = _daily_panel_totals(shopify_df)
+    else:
+        shopify_daily = (
+            shopify_df.groupby("date")
+            .agg(
+                actual_conversions=("revenue", "count"),
+                actual_revenue=("revenue", "sum"),
+            )
+            .reset_index()
         )
-        .reset_index()
-    )
 
     # Outer merge so we keep all dates
     daily = ad_daily.merge(shopify_daily, on="date", how="outer")
@@ -107,11 +129,109 @@ def _build_daily_merged(
 
     daily = daily.sort_values("date").reset_index(drop=True)
 
+    # Order-row exports cannot distinguish an unobserved day from a true zero.
+    # Never silently turn an interior missing Shopify day into campaign evidence.
+    quality_warnings = []
+    if not shopify_daily.empty:
+        expected = pd.date_range(shopify_daily.date.min(), shopify_daily.date.max(), freq="D")
+        missing = expected.difference(pd.DatetimeIndex(shopify_daily.date))
+        if len(missing):
+            quality_warnings.append(
+                f"Missing Shopify days inside observed date range ({len(missing)}): "
+                + ", ".join(d.strftime("%Y-%m-%d") for d in missing)
+                + "; complete daily Shopify coverage required; legacy store totals treat missing days as zero"
+            )
+    elif not daily.empty:
+        quality_warnings.append("No Shopify observations; campaign inference unavailable")
+    quality_notes: list[str] = []
+    if daily_input:
+        _daily_panel_checks(daily, shopify_daily, shopify_df, ad_df, quality_warnings, quality_notes)
+    daily.attrs["data_quality_warnings"] = quality_warnings
+    daily.attrs["data_quality_notes"] = quality_notes
+    daily.attrs["shopify_granularity"] = "daily" if daily_input else "orders"
+
     # Fill NaN with 0 for numeric columns
     num_cols = daily.select_dtypes(include="number").columns
     daily[num_cols] = daily[num_cols].fillna(0)
 
-    return daily
+    return attach_campaign_spend(daily, ad_df)
+
+
+def is_shopify_daily_panel(shopify_df: pd.DataFrame) -> bool:
+    """True for ``normalize_shopify_daily`` output (one row per day)."""
+    return "orders" in shopify_df.columns and "order_id" not in shopify_df.columns
+
+
+def _daily_panel_totals(shopify_df: pd.DataFrame) -> pd.DataFrame:
+    """Map a daily panel onto the order-level aggregate columns, without merging.
+
+    Each present row is one observation, including verified zero-order days.
+    Duplicates, nonfinite or non-integer values and mixed currencies raise:
+    they are rejected, never summed or repaired.
+    """
+    if shopify_df["date"].duplicated().any():
+        dupes = sorted(set(shopify_df.loc[shopify_df["date"].duplicated(), "date"]))
+        raise ValueError(
+            "Duplicate dates in daily Shopify panel (rows are never merged): "
+            + ", ".join(pd.Timestamp(d).strftime("%Y-%m-%d") for d in dupes)
+        )
+    orders = shopify_df["orders"].to_numpy(dtype=float)
+    revenue = shopify_df["revenue"].to_numpy(dtype=float)
+    if not (np.isfinite(orders).all() and np.isfinite(revenue).all()):
+        raise ValueError("Daily Shopify panel has non-finite orders or revenue")
+    if (orders < 0).any() or (orders != np.round(orders)).any():
+        raise ValueError("Daily Shopify orders must be non-negative whole numbers")
+    if "currency" in shopify_df and shopify_df["currency"].nunique(dropna=False) > 1:
+        raise ValueError(
+            "Mixed currencies in daily Shopify panel: "
+            + ", ".join(sorted(map(str, shopify_df["currency"].unique())))
+        )
+    return pd.DataFrame({
+        "date": pd.to_datetime(shopify_df["date"]).dt.normalize().to_numpy(),
+        "actual_conversions": orders.astype("int64"),
+        "actual_revenue": revenue,
+    })
+
+
+def _daily_panel_checks(daily, shopify_daily, shopify_df, ad_df, warnings, notes) -> None:
+    """Extra gates that a daily panel makes decidable.
+
+    A daily file states which days were observed, so any panel day (from ad
+    or GSC exports) without a Shopify row is unobserved, not zero.  Interior
+    gaps are already caught above; this also catches days outside the
+    Shopify range that the outer merge would otherwise fill with zero.
+    """
+    observed = pd.DatetimeIndex(shopify_daily["date"])
+    panel = pd.DatetimeIndex(daily["date"])
+    if len(observed):
+        uncovered = panel[(panel < observed.min()) | (panel > observed.max())]
+    else:
+        uncovered = panel
+    if len(uncovered):
+        warnings.append(
+            f"Panel days outside the daily Shopify file, without a daily Shopify row "
+            f"({len(uncovered)}): "
+            + ", ".join(d.strftime("%Y-%m-%d") for d in uncovered)
+            + "; ad/GSC dates must lie inside the complete daily Shopify panel"
+        )
+    currency = None
+    if "currency" in shopify_df and len(shopify_df):
+        currency = str(shopify_df["currency"].iloc[0])
+    platforms = set(ad_df["platform"].astype(str)) if "platform" in ad_df else set()
+    if currency and currency != "USD" and "meta" in platforms:
+        warnings.append(
+            f"Shopify daily revenue is in {currency} but Meta spend is 'Amount spent (USD)'; "
+            "currencies must match, nothing is converted"
+        )
+    if currency and "google_ads" in platforms:
+        notes.append(
+            f"Google Ads 'Cost' currency is not stated in the export header; the pilot must "
+            f"confirm it is {currency} (UNVERIFIED by the engine)"
+        )
+    zero_days = int((shopify_daily["actual_conversions"] == 0).sum())
+    if zero_days:
+        notes.append(f"{zero_days} verified zero-order day(s) present in the daily Shopify file "
+                     "and counted as observations")
 
 
 def _organic_baseline(daily: pd.DataFrame) -> float:

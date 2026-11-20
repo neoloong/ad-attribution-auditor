@@ -44,7 +44,7 @@ def test_incremental_roas_nan_conversions():
 
 
 def test_incremental_roas_organic_exceeds_actual():
-    """organic_revenue > actual_revenue_on → incremental=0, inflation=1.0."""
+    """An excessive baseline must retain signed revenue, not manufacture zero."""
     daily = pd.DataFrame({
         "spend": [100.0],
         "reported_revenue": [100.0],
@@ -54,9 +54,10 @@ def test_incremental_roas_organic_exceeds_actual():
     })
     config = AuditConfig()
     result = compute_incremental_roas(daily, organic_baseline=10.0, config=config)
-    # organic_revenue = 10 * 50 * 1 = 500 > actual 50 → incr = 0
-    assert result.incremental_revenue == 0.0
-    assert result.inflation_rate == 1.0
+    # organic_revenue = 10 * 50 * 1 = 500; signed incremental = 50 - 500
+    assert result.incremental_revenue == -450.0
+    assert result.true_incremental_roas == -4.5
+    assert result.inflation_rate == 5.5
 
 
 def test_incremental_roas_tiny_reported_roas_capped():

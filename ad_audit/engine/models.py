@@ -7,6 +7,24 @@ from enum import Enum
 from typing import Any
 
 import pandas as pd
+import math
+
+
+def classify_effect_interval(ci: tuple[float, float] | None, delta: float = 0.2) -> str:
+    """Exclusive evidence labels; practical equivalence takes precedence.
+
+    An interval including zero is often inconclusive, not evidence of no lift.
+    """
+    if ci is None or not all(math.isfinite(v) for v in ci) or ci[0] > ci[1]:
+        return "unavailable"
+    low, high = ci
+    if -delta <= low and high <= delta:
+        return "practically_zero"
+    if low > 0:
+        return "positive"
+    if high < 0:
+        return "negative"
+    return "inconclusive"
 
 
 class AuditMode(str, Enum):
@@ -66,6 +84,35 @@ class IncrementalROASResult:
     total_spend: float = 0.0
     reported_revenue: float = 0.0
     incremental_revenue: float = 0.0
+    confidence_interval: tuple[float, float] | None = None
+    confidence_level: float | None = None
+    standard_error: float | None = None
+    non_incremental: bool | None = None
+    estimation_method: str = "unavailable"
+
+
+@dataclass
+class CampaignEstimate:
+    """Joint-model campaign effect; unavailable means no point estimate or CI.
+
+    non_incremental is a deprecated compatibility flag (zero inside CI).
+    effect_label supplies the evidence classification with delta=0.2x.
+    """
+
+    platform: str
+    campaign_name: str
+    campaign_id: str | None = None
+    total_spend: float = 0.0
+    reported_roas: float = 0.0
+    true_incremental_roas: float | None = None
+    incremental_revenue: float | None = None
+    confidence_interval: tuple[float, float] | None = None
+    confidence_level: float | None = None
+    standard_error: float | None = None
+    non_incremental: bool | None = None
+    status: str = "unavailable"
+    effect_label: str = "unavailable"
+    warnings: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -85,6 +132,8 @@ class AuditResult:
     incremental_roas: IncrementalROASResult = field(
         default_factory=IncrementalROASResult
     )
+
+    campaign_results: list[CampaignEstimate] = field(default_factory=list)
 
     # Time-series correlation
     correlation_mean: float = 0.0
@@ -111,6 +160,10 @@ class AuditResult:
             "reported_roas": self.incremental_roas.reported_roas,
             "true_incremental_roas": self.incremental_roas.true_incremental_roas,
             "inflation_rate": self.incremental_roas.inflation_rate,
+            "confidence_interval": self.incremental_roas.confidence_interval,
+            "confidence_level": self.incremental_roas.confidence_level,
+            "non_incremental": self.incremental_roas.non_incremental,
+            "estimation_method": self.incremental_roas.estimation_method,
             "duplication_rate": self.deduplication.duplication_rate,
             "cannibalization_score": self.cannibalization.cannibalization_score,
             "organic_baseline_conversions": self.organic_baseline_conversions,

@@ -9,8 +9,8 @@ full multivariate regression::
                + θ·t  (linear trend)
                + ε
 
-The organic baseline is the intercept α — the expected sales when ad spend
-is zero, controlling for day-of-week effects, seasonality, and trends.
+The organic baseline is the mean prediction over the observed dates with
+spend set to zero, retaining their calendar controls and trend.
 
 Fallback decision tree (in priority order)
 ------------------------------------------
@@ -114,10 +114,13 @@ def estimate_organic_baseline(daily: pd.DataFrame) -> BaselineResult:
     # ---- Method 2: Time-Series Interruption ----
     ts_result = _timeseries_interruption_baseline(_daily)
     if ts_result.method == BaselineMethod.TIMESERIES_INTERRUPTION:
+        ts_result.warnings = reg_result.warnings + ts_result.warnings
         return ts_result
 
     # ---- Method 3: Warning mode (insufficient data) ----
-    return _warning_mode_fallback(_daily)
+    fallback = _warning_mode_fallback(_daily)
+    fallback.warnings = reg_result.warnings + fallback.warnings
+    return fallback
 
 
 # ---------------------------------------------------------------------------
@@ -157,26 +160,17 @@ def _regression_baseline_full(daily: pd.DataFrame) -> BaselineResult:
     X, feature_names = _build_features(daily)
     y = conv
 
-    # ---- OLS via normal equations ----
+    # SVD least squares avoids squaring the condition number in X.T @ X.
     try:
-        # Suppress spurious numpy/Accelerate warnings from internal float-accumulation
-        with np.errstate(divide='ignore', over='ignore', invalid='ignore'):
-            XtX = X.T @ X
-        # Guard against overflow / singular matrix
-        XtX_det = np.linalg.det(XtX)
-        if not np.isfinite(XtX_det) or abs(XtX_det) < 1e-12:
-            return _result_none(warnings=["OLS matrix near-singular (overflow or perfect collinearity)"])
-        with np.errstate(divide='ignore', over='ignore', invalid='ignore'):
-            Xty = X.T @ y
-        beta = np.linalg.solve(XtX, Xty)
-        if not np.isfinite(beta).all():
-            return _result_none(warnings=["OLS solution not finite"])
+        beta, _, rank, _ = np.linalg.lstsq(X, y, rcond=None)
+        if rank < X.shape[1] or not np.isfinite(beta).all():
+            return _result_none(warnings=["OLS design is rank deficient or not finite"])
     except np.linalg.LinAlgError:
-        return _result_none(warnings=["OLS solution failed (singular matrix)"])
+        return _result_none(warnings=["OLS solution failed"])
 
     intercept = beta[0]
     if intercept < 0:
-        return _result_none(warnings=[f"Negative intercept clamped to 0: {intercept:.2f}"])
+        return _result_none(warnings=[f"Negative organic intercept: {intercept:.2f}"])
 
     # ---- R² check ----
     with np.errstate(divide='ignore', over='ignore', invalid='ignore'):
@@ -199,7 +193,7 @@ def _regression_baseline_full(daily: pd.DataFrame) -> BaselineResult:
     baseline = _compute_baseline_from_coeffs(
         beta=beta,
         feature_names=feature_names,
-        n=len(daily),
+        design=X,
     )
 
     ad_marginal_idx = feature_names.index("ad_spend") if "ad_spend" in feature_names else None
@@ -232,7 +226,7 @@ def _build_features(daily: pd.DataFrame) -> tuple[np.ndarray, list[str]]:
     Returns (X, feature_names) where X has shape (n_obs, n_features).
     """
     n = len(daily)
-    features: dict[str, np.ndarray] = {}
+    features: dict[str, np.ndarray] = {"const": np.ones(n)}
 
     # Core variable: ad spend (clipped to 0 — can't be negative)
     # Normalise to [0,1] to prevent overflow in X.T @ X (same reason as trend)
@@ -251,7 +245,8 @@ def _build_features(daily: pd.DataFrame) -> tuple[np.ndarray, list[str]]:
         features[col] = month[col].values
 
     # Linear trend (days from start, normalised to [0,1] to avoid overflow)
-    features["trend"] = np.arange(n, dtype=float) / max(n - 1, 1)
+    elapsed = (daily["date"] - daily["date"].min()).dt.total_seconds().to_numpy() / 86400
+    features["trend"] = elapsed / max(float(elapsed.max()) if n else 0.0, 1.0)
 
     # Assemble matrix
     feature_names = list(features.keys())
@@ -263,31 +258,27 @@ def _build_features(daily: pd.DataFrame) -> tuple[np.ndarray, list[str]]:
 def _compute_baseline_from_coeffs(
     beta: np.ndarray,
     feature_names: list[str],
-    n: int,
+    n: int | None = None,
+    *,
+    design: np.ndarray | None = None,
 ) -> float:
-    """Compute baseline from regression coefficients.
+    """Mean zero-spend prediction on the actual observation dates.
 
-    Baseline = α + avg_DOW_effect + avg_month_effect + trend_effect_at_midpoint
-
-    The control-variable effects are averaged assuming a "typical" day
-    (uniform distribution across DOW and month).
+    A design matrix is required for calendar effects: averaging dummy
+    coefficients ignores reference categories and unequal date frequencies.
+    ``n`` remains for callers with only const/trend (normalized midpoint 0.5).
     """
-    alpha = beta[0]
-
-    # Average DOW effect (dow_1 … dow_6; dow_0 is reference)
-    dow_indices = [i for i, name in enumerate(feature_names) if name.startswith("dow_")]
-    avg_dow = np.mean([beta[i] for i in dow_indices]) if dow_indices else 0.0
-
-    # Average month effect (month_2 … month_12; month_1 is reference)
-    month_indices = [i for i, name in enumerate(feature_names) if name.startswith("month_")]
-    avg_month = np.mean([beta[i] for i in month_indices]) if month_indices else 0.0
-
-    # Trend effect at midpoint of data
-    trend_idx = feature_names.index("trend") if "trend" in feature_names else None
-    trend_mid = (n - 1) / 2
-    trend_effect = beta[trend_idx] * trend_mid if trend_idx is not None else 0.0
-
-    return float(alpha + avg_dow + avg_month + trend_effect)
+    if design is None:
+        if any(name.startswith(("dow_", "month_")) for name in feature_names):
+            raise ValueError("Calendar controls require the observed design matrix")
+        means = np.array([1.0 if name == "const" else
+                          (0.5 if n and n > 1 else 0.0) if name == "trend" else 0.0
+                          for name in feature_names])
+    else:
+        means = design.mean(axis=0).copy()
+        if "ad_spend" in feature_names:
+            means[feature_names.index("ad_spend")] = 0.0
+    return float(means @ beta)
 
 
 def _durbin_watson(residuals: np.ndarray) -> float:
@@ -350,7 +341,7 @@ def _timeseries_interruption_baseline(daily: pd.DataFrame) -> BaselineResult:
     if best_len >= MIN_INTERRUPTION_LENGTH_DAYS:
         streak_convs = conv[best_start : best_start + best_len]
         return BaselineResult(
-            baseline_daily=float(np.mean(streak_convs)),
+            baseline_daily=max(0.0, float(np.mean(streak_convs))),
             method=BaselineMethod.TIMESERIES_INTERRUPTION,
             r_squared=0.0,
             ad_marginal_effect=0.0,
@@ -401,7 +392,7 @@ def _detect_spend_drop(daily: pd.DataFrame) -> Optional[BaselineResult]:
     if best_len >= MIN_INTERRUPTION_LENGTH_DAYS:
         streak_convs = conv[best_start : best_start + best_len]
         return BaselineResult(
-            baseline_daily=float(np.mean(streak_convs)),
+            baseline_daily=max(0.0, float(np.mean(streak_convs))),
             method=BaselineMethod.TIMESERIES_INTERRUPTION,
             r_squared=0.0,
             ad_marginal_effect=0.0,
@@ -425,7 +416,7 @@ def _warning_mode_fallback(daily: pd.DataFrame) -> BaselineResult:
     spend_on = daily.get("spend_on", daily["spend"] >= 5.0)
     off_convs = daily.loc[~spend_on, "actual_conversions"]
 
-    warnings = [f"Warning mode: data < {MIN_DAYS_REGRESSION} days, result may be unreliable"]
+    warnings = ["Regression unavailable; baseline fallback is uncalibrated"]
 
     if off_convs.empty or off_convs.isna().all():
         return BaselineResult(
@@ -438,7 +429,7 @@ def _warning_mode_fallback(daily: pd.DataFrame) -> BaselineResult:
         )
 
     return BaselineResult(
-        baseline_daily=float(off_convs.mean()),
+        baseline_daily=max(0.0, float(off_convs.mean())),
         method=BaselineMethod.WARNING_MODE,
         r_squared=0.0,
         ad_marginal_effect=0.0,

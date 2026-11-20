@@ -12,7 +12,10 @@ def compute_incremental_roas(
     organic_baseline: float,
     config: AuditConfig,
 ) -> IncrementalROASResult:
-    """Compute reported ROAS versus true incremental ROAS.
+    """Legacy store-level baseline subtraction (no campaign inference).
+
+    Signed revenue is retained. This fallback has no calibrated interval;
+    aggregate_audit replaces it with joint regression when identifiable.
 
     True incremental revenue = total spend-on revenue minus the organic
     baseline revenue that would have happened anyway.
@@ -37,7 +40,7 @@ def compute_incremental_roas(
         avg_rev_per_conv = daily["actual_revenue"].sum() / actual_conv_sum
 
     organic_revenue = organic_baseline * avg_rev_per_conv * spend_on_days
-    incremental_revenue = max(0.0, actual_revenue_on - organic_revenue)
+    incremental_revenue = actual_revenue_on - organic_revenue
 
     reported_roas = reported_revenue / total_spend if total_spend > 0 else 0.0
     true_roas = incremental_revenue / total_spend if total_spend > 0 else 0.0
@@ -52,4 +55,5 @@ def compute_incremental_roas(
         total_spend=round(total_spend, 2),
         reported_revenue=round(reported_revenue, 2),
         incremental_revenue=round(incremental_revenue, 2),
+        estimation_method="baseline_subtraction_uncalibrated",
     )
