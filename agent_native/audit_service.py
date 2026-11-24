@@ -50,7 +50,12 @@ from ad_audit.ingestion.normalizer import (  # noqa: E402
 from ad_audit.ingestion.schemas import SCHEMAS  # noqa: E402
 from ad_audit.ingestion.validators import InvalidInputError, validate_schema  # noqa: E402
 from ad_audit.report.holdout import ACTION_NOTICE, appendix_markdown  # noqa: E402
-from scripts.gate1_pdf import ACTION_RULE, margin_threshold, provisional_action_for_interval  # noqa: E402
+from scripts.gate1_pdf import (  # noqa: E402
+    ACTION_RULE,
+    label_action_note,
+    margin_threshold,
+    provisional_action_for_interval,
+)
 from scripts.run_v2_validation import mde_factor  # noqa: E402
 
 RUNS_DIR = Path(__file__).resolve().parent / "runs"
@@ -479,7 +484,11 @@ def render_markdown(r: dict) -> str:
                  f"{c['effect_label'].replace('_', ' ')} | {_x(c['mde80'])} | {c['action_display']} |")
     L += ["", "**Reasons for these priorities**", ""]
     for c in r["campaigns"]:
-        L.append(f"- **{c['campaign_name']}** — {c['action_display']}: {c['engine_action_reason']}")
+        reason = c["engine_action_reason"]
+        note = label_action_note(c["confidence_interval"], rule["break_even_iroas"])
+        if note:
+            reason += f" {note}"
+        L.append(f"- **{c['campaign_name']}** — {c['action_display']}: {reason}")
     if r["engine"]["validation_gate"] != "PASS":
         L += ["", f"**Validation hold.** The engine's validation gate is `{r['engine']['validation_gate']}` "
                   "(validation/v2-calibration-2026-11-09.md). Maintain all current budgets while gathering "

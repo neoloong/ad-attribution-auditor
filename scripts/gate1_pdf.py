@@ -5,6 +5,7 @@ missing confidence interval with a fabricated interval or the synthetic truth.
 """
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 import math
 
@@ -77,7 +78,7 @@ class PDF:
         self.text(42, 92, title, 27, True, NAVY)
         self.text(42, 116, subtitle, 10, False, MUTED)
         self.rect(42, 747, 528, 0.6, (0.80, 0.84, 0.87))
-        self.text(42, 765-9, "Prepared 2026-11-09  |  Local synthetic demonstration", 8, False, MUTED)
+        self.text(42, 765-9, f"Prepared {date.today().isoformat()}  |  Local synthetic demonstration", 8, False, MUTED)
         self.text(539, 756, f"{number} / 4", 8, False, MUTED)
 
     def save(self, path):
@@ -158,6 +159,30 @@ def provisional_action_for_interval(ci, threshold):
     return "hold", reason + " Maintain budget while gathering evidence."
 
 
+def label_action_note(ci, threshold):
+    """Explain when the evidence label and kill priority use different thresholds."""
+    label = classify_effect_interval(ci)
+    action, _ = provisional_action_for_interval(ci, threshold)
+    if action != "kill":
+        return ""
+    if label == "inconclusive":
+        return (
+            "The label is inconclusive because the interval includes zero — the data cannot establish "
+            "whether this campaign has any effect at all. The kill priority is judged against the "
+            f"{threshold:.2f}x break-even, not zero: even the most optimistic end of the interval "
+            f"({ci[1]:.2f}x) is below break-even, so at every value the data allow, this campaign "
+            "cannot cover its cost."
+        )
+    if label == "positive":
+        return (
+            "The label is positive because the interval excludes zero, but the kill priority is judged "
+            f"against the {threshold:.2f}x break-even, not zero: even the most optimistic end of the "
+            f"interval ({ci[1]:.2f}x) is below break-even, so the effect, though likely real, is too "
+            "small to cover its cost at this margin."
+        )
+    return ""
+
+
 def render_report(data, path, contribution_margin=None):
     margin, threshold = margin_threshold(contribution_margin)
     doc = PDF()
@@ -219,22 +244,25 @@ def render_report(data, path, contribution_margin=None):
     y = doc.paragraph(42, 145, rule, size=10.5, leading=15)
     doc.paragraph(42, y + 5, ACTION_NOTICE, size=10.5, leading=15)
     for i, r in enumerate(runs):
-        top = 240 + i * 150
-        doc.rect(42, top, 528, 133, LIGHT)
-        doc.text(56, top + 25, r["campaign"], 15, True, NAVY)
+        top = 225 + i * 172
+        doc.rect(42, top, 528, 164, LIGHT)
+        doc.text(56, top + 23, r["campaign"], 15, True, NAVY)
         doc.rect(440, top + 10, 114, 24, TEAL)
         metrics = r["incremental_roas"]
-        proposed_action, reason = provisional_action_for_interval(metrics["confidence_interval"], threshold)
-        action = proposed_action if data["gate"] == "PASS" else "hold"
+        ci = metrics["confidence_interval"]
+        action, reason = provisional_action_for_interval(ci, threshold)
         doc.text(451, top + 26, f"{action} (provisional)", 10, True, WHITE)
-        doc.text(56, top + 49,
+        doc.text(56, top + 45,
                  f"Platform {roas(metrics['reported_roas'])}  |  Estimate {roas(metrics['true_incremental_roas'])}"
                  f"  |  95% CI {interval(metrics)}", 9)
-        label = classify_effect_interval(metrics["confidence_interval"]).replace("_", " ")
-        doc.text(56, top + 68, f"Evidence label: {label} (practical region +/-0.2x).", 9, False, MUTED)
+        label = classify_effect_interval(ci).replace("_", " ")
+        doc.text(56, top + 62, f"Evidence label: {label} (practical region +/-0.2x).", 9, False, MUTED)
         if data["gate"] != "PASS":
-            reason = f"Validation hold. Provisional priority: {proposed_action}. {reason}"
-        doc.paragraph(56, top + 92, reason, width=491, size=10, leading=14)
+            reason = f"Validation hold. Provisional priority: {action}. {reason}"
+        note = label_action_note(ci, threshold)
+        if note:
+            reason += f" {note}"
+        doc.paragraph(56, top + 81, reason, width=491, size=10, leading=13)
 
     doc.page(3, "Methodology & limitations", "Aggregate daily analysis  |  Revenue return, not contribution profit")
     doc.text(42, 157, "How the engine produced these figures", 15, True, NAVY)

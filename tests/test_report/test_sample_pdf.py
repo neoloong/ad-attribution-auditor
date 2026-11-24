@@ -1,12 +1,14 @@
 """Financial decision thresholds and the actual rendered report contract."""
 from copy import deepcopy
+from datetime import date
 import json
 from pathlib import Path
 import re
 
 import pytest
 
-from scripts.gate1_pdf import action_for_interval, margin_threshold, render_report
+from agent_native.audit_service import render_markdown
+from scripts.gate1_pdf import action_for_interval, label_action_note, margin_threshold, render_report
 
 
 @pytest.mark.parametrize('margin,threshold', [(None, 2.5), (.4, 2.5), (.25, 4), (.5, 2), (1, 1)])
@@ -69,3 +71,74 @@ def test_customer_margin_pdf_recomputes_actions_instead_of_using_stale_values(tm
         assert action in text
         assert 'STALE' not in text and 'Stale 1.0x rule' not in text
         assert 'Customer margin unknown' not in text
+
+
+def test_validation_hold_pdf_shows_each_campaign_priority(tmp_path):
+    data = sample_data()
+    data['gate'] = 'FAIL'
+    kill, hold, inconclusive = data['campaign_results']
+    kill['incremental_roas']['confidence_interval'] = [0.5, 1.2]
+    hold['incremental_roas']['confidence_interval'] = [1.83, 3.58]
+    inconclusive['incremental_roas']['confidence_interval'] = [-1.54, 1.26]
+
+    path = tmp_path / 'validation-hold.pdf'
+    render_report(data, path)
+    text = pdf_text(path)
+    assert f"{kill['campaign']} kill (provisional)" in text
+    assert f"{hold['campaign']} hold (provisional)" in text
+    assert f"{inconclusive['campaign']} kill (provisional)" in text
+    assert 'Validation hold. Provisional priority: kill.' in text
+    assert 'Validation hold. Provisional priority: hold.' in text
+    assert label_action_note([0.5, 1.2], 2.5) in text
+    assert label_action_note([-1.54, 1.26], 2.5) in text
+
+
+def test_pdf_footer_uses_generation_date(tmp_path):
+    path = tmp_path / 'prepared-date.pdf'
+    render_report(sample_data(), path)
+    footers = re.findall(r'Prepared \d{4}-\d{2}-\d{2}  \|  Local synthetic demonstration', pdf_text(path))
+    assert footers == [f'Prepared {date.today().isoformat()}  |  Local synthetic demonstration'] * 4
+    assert all('2026-11-09' not in footer for footer in footers)
+
+
+@pytest.mark.parametrize('ci,label,upper_bound', [
+    ([-1.54, 1.26], 'inconclusive', '1.26x'),
+    ([0.5, 1.2], 'positive', '1.20x'),
+])
+def test_kill_note_explains_evidence_label_and_break_even(ci, label, upper_bound):
+    note = label_action_note(ci, 2.5)
+    assert note.startswith(f'The label is {label} because')
+    assert '2.50x break-even' in note
+    assert upper_bound in note
+
+
+@pytest.mark.parametrize('ci', [[1.83, 3.58], [-2.0, -0.5], None, [-0.1, 0.1], [-1.54, 3.58]])
+def test_label_action_note_omits_other_combinations(ci):
+    assert label_action_note(ci, 2.5) == ''
+
+
+def test_markdown_appends_shared_note_to_campaign_reason():
+    metrics = {
+        'total_spend': 100,
+        'reported_roas': 2.8,
+        'true_incremental_roas': -0.14,
+        'confidence_interval': [-1.54, 1.26],
+        'effect_label': 'inconclusive',
+    }
+    reason = 'Entire 95% interval is below the 2.50x margin threshold. Consider stopping only if a holdout confirms it.'
+    report = {
+        'report_id': 'sample',
+        'dataset': {'start': '2026-11-01', 'end': '2026-11-03', 'days': 3, 'shopify_granularity': 'daily'},
+        'store': {**metrics, 'reported_revenue': 280, 'incremental_revenue': -14},
+        'engine': {'method': 'OLS', 'model_status': 'estimated', 'validation_gate': 'FAIL'},
+        'decision_rule': {'rule': 'Break-even rule', 'action_notice': 'Provisional priorities',
+                          'break_even_iroas': 2.5, 'practical_zero_delta': 0.2},
+        'campaigns': [{**metrics, 'platform': 'Google', 'campaign_name': 'Search', 'mde80': None,
+                       'action_display': 'kill (provisional)', 'engine_action_reason': reason}],
+        'warnings': {'identification_limitations': []},
+        'model_diagnostics': {},
+        'mde80_definition': 'Minimum detectable effect at 80% power',
+    }
+    note = label_action_note(metrics['confidence_interval'], 2.5)
+    assert note
+    assert f'- **Search** — kill (provisional): {reason} {note}' in render_markdown(report).splitlines()
