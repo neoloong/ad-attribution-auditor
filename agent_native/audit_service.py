@@ -1,7 +1,7 @@
 """Engine glue for the agent-native MCP prototype.
 
-This module contains NO estimation logic.  Every number, label, interval,
-warning and action comes from the existing engine code paths:
+This module contains NO estimation logic. It uses the existing audit code
+paths for estimates, evidence labels and underlying actions:
 
 * ``ad_audit.ingestion.loader.load_csv``                 - CSV bytes -> DataFrame
 * ``ad_audit.ingestion.validators.validate_schema``      - headers + strict values
@@ -13,8 +13,7 @@ warning and action comes from the existing engine code paths:
 * ``scripts.gate1_pdf.margin_threshold`` / ``provisional_action_for_interval`` - break-even + report priorities
 * ``scripts.run_v2_validation.mde_factor``               - MDE80 factor (x SE)
 
-The only things computed here are bookkeeping facts (row counts, date ranges,
-file hashes, which calendar days have no ad rows at all) and text rendering.
+This service handles bookkeeping, intake screening for presentation, and text rendering.
 """
 from __future__ import annotations
 
@@ -49,6 +48,7 @@ from ad_audit.ingestion.normalizer import (  # noqa: E402
 )
 from ad_audit.ingestion.schemas import SCHEMAS  # noqa: E402
 from ad_audit.ingestion.validators import InvalidInputError, validate_schema  # noqa: E402
+from ad_audit.report import screening as budget_screening  # noqa: E402
 from ad_audit.report.holdout import ACTION_NOTICE, appendix_markdown  # noqa: E402
 from scripts.gate1_pdf import (  # noqa: E402
     ACTION_RULE,
@@ -292,12 +292,16 @@ def _apply_report_wording(report: dict) -> None:
     rule["action_notice"] = ACTION_NOTICE
     rule["profit_calls"] = False
     gate = report["engine"]["validation_gate"]
+    level = (report.get("screening") or {}).get("risk_level")
     for campaign in report["campaigns"]:
         campaign.update(_action(campaign["confidence_interval"], threshold, gate))
+        if level == "high":
+            action = budget_screening.presentation_action(campaign["action"], level)
+            campaign["action_display"] = f"{action} (provisional)"
 
 
 def run_audit(meta_ads: dict | None = None, google_ads: dict | None = None, shopify: dict | None = None,
-              contribution_margin: float | None = None) -> dict:
+              contribution_margin: float | None = None, screening: dict | None = None) -> dict:
     datasets = {"meta_ads": meta_ads, "google_ads": google_ads}
     errors: list[str] = []
     if not (meta_ads or google_ads):
@@ -312,6 +316,11 @@ def run_audit(meta_ads: dict | None = None, google_ads: dict | None = None, shop
     except (ValueError, TypeError) as exc:
         errors.append(f"contribution_margin: {exc}")
         margin = threshold = None
+    try:
+        assessment = (budget_screening.not_screened() if screening is None
+                      else budget_screening.assess_screening(screening))
+    except ValueError as exc:
+        errors.append(f"screening: {exc}")
     if errors:
         return {"ok": False, "status": "rejected: " + errors[0], "errors": errors}
 
@@ -365,6 +374,8 @@ def run_audit(meta_ads: dict | None = None, google_ads: dict | None = None, shop
     assumed = contribution_margin is None
     created = _dt.datetime.now(_dt.timezone.utc)
     digest = hashlib.sha256(b"".join(v[0] for v in loaded.values()) + repr(contribution_margin).encode())
+    if assessment["provided"]:
+        digest.update(json.dumps(assessment["answers"], sort_keys=True).encode())
     run_id = created.strftime("%Y%m%dT%H%M%SZ") + "-" + digest.hexdigest()[:8]
 
     warnings = {
@@ -393,6 +404,7 @@ def run_audit(meta_ads: dict | None = None, google_ads: dict | None = None, shop
                           "practical_zero_delta": DELTA},
         "store": store,
         "campaigns": campaigns,
+        "screening": assessment,
         "warnings": warnings,
         "model_diagnostics": {k: v for k, v in model.items() if k != "campaigns"},
         "legacy_health_alerts": [asdict(a) for a in alerts],
@@ -416,7 +428,7 @@ def run_audit(meta_ads: dict | None = None, google_ads: dict | None = None, shop
     for kind, (raw, _, source) in loaded.items():
         (out_dir / "inputs" / f"{kind}.csv").write_bytes(raw)
     (out_dir / "request.json").write_text(json.dumps(_clean({
-        "contribution_margin": contribution_margin, "shopify_kind": shop_kind,
+        "contribution_margin": contribution_margin, "shopify_kind": shop_kind, "screening": assessment["answers"],
         "files": {k: v[2] for k, v in loaded.items()}}), indent=2) + "\n")
     (out_dir / "result.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
     (out_dir / "report.md").write_text(markdown)
@@ -460,14 +472,21 @@ def _money(v):
 def render_markdown(r: dict) -> str:
     s, d, rule = r["store"], r["dataset"], r["decision_rule"]
     w = r["warnings"]
+    screening = r.get("screening") or budget_screening.not_screened()
+    level = screening["risk_level"]
+    store_label = s["effect_label"].replace("_", " ")
+    if level == "high" and store_label == "positive":
+        store_label += f" — downgraded at high endogeneity risk: {budget_screening.DOWNGRADE_PHRASE}"
     L = [f"# Ad attribution audit — report {r['report_id']}", "",
          f"Data window: {d['start']} to {d['end']} ({d['days']} days); Shopify input: {d['shopify_granularity']}. "
-         f"Method: {r['engine']['method']} (model status: {r['engine']['model_status']}).", "",
-         "## Headline (all campaigns combined)", "",
+         f"Method: {r['engine']['method']} (model status: {r['engine']['model_status']}).", ""]
+    if level == "high":
+        L += [f"> **{budget_screening.HIGH_WARNING}**", ""]
+    L += ["## Headline (all campaigns combined)", "",
          f"- Total ad spend: {_money(s['total_spend'])}",
          f"- Platform-reported ROAS: {_x(s['reported_roas'])} ({_money(s['reported_revenue'])} claimed by platforms)",
          f"- Estimated store incremental ROAS (iROAS): {_x(s['true_incremental_roas'])}, "
-         f"95% CI {_ci(s['confidence_interval'])}, label: {s['effect_label'].replace('_', ' ')}"
+         f"95% CI {_ci(s['confidence_interval'])}, label: {store_label}"
          + (f", MDE80 {_x(s['mde80'])}" if s.get("mde80") is not None else ""),
          f"- Estimated incremental revenue: {_money(s['incremental_revenue'])}",
          f"- Estimated iROAS is {s['inflation_rate']:.0%} below platform-reported ROAS"
@@ -475,13 +494,35 @@ def render_markdown(r: dict) -> str:
     if s.get("note"):
         L += [f"> {s['note']}", ""]
     L += ["## Decision threshold", "", rule["rule"], ""]
+    L += ["## Budget-behavior screening", ""]
+    if not screening["provided"]:
+        L.append(budget_screening.NOT_SCREENED_STATEMENT)
+    else:
+        L += [f"Endogeneity risk level: **{level}** (budget-behavior screening, intake Section B).", ""]
+        L.extend(f"- Basis: {basis}" for basis in screening["basis"])
+        if level == "low" and not budget_screening.PLATFORM_BIDDING_TOOLS.isdisjoint(screening["answers"]["b3a_tools"]):
+            L += ["", budget_screening.LOW_BID_NOTE]
+        if level == "medium" and screening["promotions"]:
+            L += ["", "Promotion dates flagged from the intake calendar:", ""]
+            for promotion in screening["promotions"]:
+                raised = " (budget raised)" if promotion["budget_raised"] else ""
+                L.append(f"- {promotion['dates']} — {promotion['event']}{raised}")
+        if screening["prior_lift"] is not None:
+            L += ["", budget_screening.prior_lift_comparison(screening["prior_lift"])]
+        if level == "high":
+            L += ["", "At this risk level, positive conclusions are downgraded and no directional action other "
+                      "than kill is given; other priorities are shown as hold. A holdout is the top priority."]
+    L.append("")
     L += ["## Per-campaign results", "", rule["action_notice"], "",
           "| Platform | Campaign | Spend | Platform ROAS | Est. iROAS | 95% CI | Label | MDE80 | Action |",
           "|---|---|---:|---:|---:|---|---|---:|---|"]
     for c in r["campaigns"]:
+        label = c["effect_label"].replace("_", " ")
+        if level == "high" and label == "positive":
+            label += f" (downgraded: {budget_screening.DOWNGRADE_PHRASE})"
         L.append(f"| {c['platform']} | {c['campaign_name']} | {_money(c['total_spend'])} | {_x(c['reported_roas'])} | "
                  f"{_x(c['true_incremental_roas'])} | {_ci(c['confidence_interval'])} | "
-                 f"{c['effect_label'].replace('_', ' ')} | {_x(c['mde80'])} | {c['action_display']} |")
+                 f"{label} | {_x(c['mde80'])} | {c['action_display']} |")
     L += ["", "**Reasons for these priorities**", ""]
     for c in r["campaigns"]:
         reason = c["engine_action_reason"]
@@ -522,7 +563,7 @@ def render_markdown(r: dict) -> str:
     if r.get("legacy_health_alerts"):
         L += ["", "## Legacy dashboard alerts (not campaign inference)", "", r["legacy_health_alerts_note"], ""]
         L += [f"- {a['severity']}: {a['title']} — {a['message']}" for a in r["legacy_health_alerts"]]
-    L += ["", f"MDE80: {r['mde80_definition']}", "", appendix_markdown(
-        (c["campaign_name"], c["total_spend"], c["confidence_interval"]) for c in r["campaigns"]
-    )]
+    appendix_campaigns = ((c["campaign_name"], c["total_spend"], c["confidence_interval"]) for c in r["campaigns"])
+    lead = budget_screening.MEDIUM_HOLDOUT_LEAD if level == "medium" else None
+    L += ["", f"MDE80: {r['mde80_definition']}", "", appendix_markdown(appendix_campaigns, lead=lead)]
     return "\n".join(x for x in L if x is not None) + "\n"

@@ -10,6 +10,7 @@ from pathlib import Path
 import math
 
 from ad_audit.engine.models import classify_effect_interval
+from ad_audit.report import screening as budget_screening
 from ad_audit.report.holdout import ACTION_NOTICE, SECTIONS, TITLE, cost_example
 
 NAVY = (0.10, 0.17, 0.25)
@@ -183,8 +184,28 @@ def label_action_note(ci, threshold):
     return ""
 
 
-def render_report(data, path, contribution_margin=None):
+def _screening_body(screening):
+    if not screening["provided"]:
+        return "Screening was not provided; no endogeneity risk level was assigned."
+    level = screening["risk_level"]
+    basis = " ".join(screening["basis"])
+    notes = [f"Endogeneity risk level: {level.upper()}. Basis: {basis}"]
+    if level == "low" and not budget_screening.PLATFORM_BIDDING_TOOLS.isdisjoint(screening["answers"]["b3a_tools"]):
+        notes.append(budget_screening.LOW_BID_NOTE)
+    if level == "medium" and screening["promotions"]:
+        dates = "; ".join(f"{p['dates']} ({p['event']})" for p in screening["promotions"])
+        notes.append(f"Promotion dates flagged from the intake calendar: {dates}.")
+    if screening["prior_lift"] is not None:
+        notes.append(budget_screening.prior_lift_comparison(screening["prior_lift"]))
+    if level == "high":
+        notes.append("See the warning on page 1: positive conclusions are downgraded and no directional action "
+                     "other than kill is given.")
+    return " ".join(notes)
+
+
+def render_report(data, path, contribution_margin=None, screening=None):
     margin, threshold = margin_threshold(contribution_margin)
+    level = screening["risk_level"] if screening is not None else None
     doc = PDF()
     combined = data["combined"]
     ir = combined["incremental_roas"]
@@ -196,15 +217,27 @@ def render_report(data, path, contribution_margin=None):
     doc.text(56, 163, f"SYNTHETIC QUALITY GATE: {data['gate']}", 11, True, TEAL)
     doc.paragraph(56, 183, "Joint campaign estimates with 95% confidence intervals. Suggested actions "
                   "apply to this synthetic example; validate real budget changes with a holdout.", width=495, size=10)
+    dy = 0
+    if level == "high":
+        doc.rect(42, 214, 528, 54, AMBER)
+        doc.paragraph(56, 230, budget_screening.HIGH_WARNING, width=500, size=9.5, leading=12, color=NAVY)
+        dy = 58
+    elif screening is not None:
+        summary = {
+            None: "not provided - no endogeneity risk level assigned.",
+            "low": "LOW endogeneity risk - normal wording.",
+            "medium": "MEDIUM endogeneity risk - standard provisional wording.",
+        }[level]
+        doc.text(42, 224, f"Budget-behavior screening: {summary}", 9, color=MUTED)
     metrics = [("TOTAL AD SPEND", dollars(ir["total_spend"])),
                ("PLATFORM ROAS", f"{ir['reported_roas']:.4f}x"),
                ("ESTIMATED STORE iROAS", f"{ir['true_incremental_roas']:.4f}x")]
     for i, (label, value) in enumerate(metrics):
         x = 42 + i * 178
-        doc.text(x, 244, label, 8, True, MUTED)
-        doc.text(x, 276, value, 25, True, NAVY)
-    doc.text(42, 316, "Headline findings", 15, True, NAVY)
-    y = doc.paragraph(42, 339,
+        doc.text(x, 244 + dy, label, 8, True, MUTED)
+        doc.text(x, 276 + dy, value, 25, True, NAVY)
+    doc.text(42, 316 + dy, "Headline findings", 15, True, NAVY)
+    y = doc.paragraph(42, 339 + dy,
                       f"Store 95% interval: {interval(ir)}. Estimated incremental revenue is "
                       f"{dollars(ir['incremental_revenue'])}, versus {dollars(ir['reported_revenue'])} "
                       f"claimed by platforms. Estimated iROAS is {ir['inflation_rate']:.2%} below platform ROAS.")
@@ -251,12 +284,16 @@ def render_report(data, path, contribution_margin=None):
         metrics = r["incremental_roas"]
         ci = metrics["confidence_interval"]
         action, reason = provisional_action_for_interval(ci, threshold)
-        doc.text(451, top + 26, f"{action} (provisional)", 10, True, WHITE)
+        badge_action = budget_screening.presentation_action(action, level) if screening is not None else action
+        doc.text(451, top + 26, f"{badge_action} (provisional)", 10, True, WHITE)
         doc.text(56, top + 45,
                  f"Platform {roas(metrics['reported_roas'])}  |  Estimate {roas(metrics['true_incremental_roas'])}"
                  f"  |  95% CI {interval(metrics)}", 9)
         label = classify_effect_interval(ci).replace("_", " ")
-        doc.text(56, top + 62, f"Evidence label: {label} (practical region +/-0.2x).", 9, False, MUTED)
+        label_line = f"Evidence label: {label} (practical region +/-0.2x)."
+        if level == "high" and label == "positive":
+            label_line = "Evidence label: positive - downgraded (high endogeneity risk)."
+        doc.text(56, top + 62, label_line, 9, False, MUTED)
         if data["gate"] != "PASS":
             reason = f"Validation hold. Provisional priority: {action}. {reason}"
         note = label_action_note(ci, threshold)
@@ -294,13 +331,19 @@ def render_report(data, path, contribution_margin=None):
          "fixture; they do not establish calibration with endogenous spend, serial correlation or "
          "carryover. Validate material budget changes with a controlled holdout."),
     ]
+    if screening is not None:
+        sections.append(("Budget-behavior screening", _screening_body(screening)))
     y = 185
+    # Leave room for the added section above the footer on screened reports.
+    leading = 12 if screening is not None else 15
     for title, body in sections:
         doc.text(42, y, title, 11, True, TEAL)
-        y = doc.paragraph(42, y + 21, body, size=10.5, leading=15) + 18
+        y = doc.paragraph(42, y + 21, body, size=10.5, leading=leading) + 18
 
     doc.page(4, TITLE, "")
     y = 130
+    if level == "medium":
+        y = doc.paragraph(42, y, budget_screening.MEDIUM_HOLDOUT_LEAD, size=10, leading=13) + 9
     for title, body in SECTIONS:
         doc.text(42, y, title, 11, True, TEAL)
         y = doc.paragraph(42, y + 16, body, size=10, leading=13) + 9

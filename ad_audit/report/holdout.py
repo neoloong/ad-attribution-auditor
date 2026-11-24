@@ -44,8 +44,10 @@ def cost_example(spend, ci):
     return f"Reported spend ${spend:,.2f}. Opportunity cost = S_paused × [{ci[0]:.4f}, {ci[1]:.4f}] in dollars."
 
 
-def appendix_markdown(campaigns):
+def appendix_markdown(campaigns, lead=None):
     lines = [f"## {TITLE}", ""]
+    if lead is not None:
+        lines.extend([lead, ""])
     lines.extend(f"**{heading}.** {body}\n" for heading, body in SECTIONS)
     lines.extend(f"- **{name}** — {cost_example(spend, ci)}" for name, spend, ci in campaigns)
     return "\n".join(lines)

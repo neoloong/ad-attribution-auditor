@@ -88,6 +88,9 @@ TOOLS = [
                 "contribution_margin": {"type": "number", "exclusiveMinimum": 0, "maximum": 1,
                                         "description": "Contribution margin as a fraction, e.g. 0.35. "
                                                        "Omit only if the user does not know it."},
+                "screening": {"type": "object", "description": "Optional intake Section B budget-behavior answers; "
+                              "see audit_service / ad_audit.report.screening for fields. Omit if the user has not "
+                              "answered the screening questions."},
             },
             "required": ["shopify"],
             "additionalProperties": False,
@@ -139,7 +142,7 @@ def call_tool(name: str, args: dict) -> dict:
         is_error = False  # a rejected file is a normal, structured answer
     elif name == "run_audit":
         result = svc.run_audit(args.get("meta_ads"), args.get("google_ads"), args.get("shopify"),
-                               args.get("contribution_margin"))
+                               args.get("contribution_margin"), args.get("screening"))
         is_error = not result.get("ok", False)
     elif name == "get_report":
         result = svc.get_report(args.get("report_id"))
