@@ -12,6 +12,12 @@
   <img src="https://img.shields.io/badge/next.js-16-000000?logo=nextdotjs" alt="Next.js">
 </p>
 
+<p align="center">
+  <strong><a href="https://ad-attribution-auditor.vercel.app">Landing page</a></strong> ·
+  <strong><a href="https://www.upwork.com/services/product/marketing-incremental-roas-audit-of-meta-google-ads-estimated-from-shopify-orders-2124818567336541716">Order the audit on Upwork</a></strong><br>
+  One-off incremental ROAS audit of your Meta &amp; Google ads, estimated from your Shopify orders — interactive report + PDF.
+</p>
+
 ---
 
 ## Two Flavors
